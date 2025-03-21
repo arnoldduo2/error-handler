@@ -1,0 +1,34 @@
+{
+  "name": "anode/error-handler",
+  "description": "A simple error handler for PHP applications.",
+  "type": "library",
+  "keywords": [
+    "error",
+    "handler",
+    "exception",
+    "logging"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Arnold Samhungu",
+      "email": "arnoldduo2@gmail.com",
+      "homepage": "https://github.com/arnoldduo2",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Anode\\ErrorHandler\\": "src/"
+    },
+    "files": [
+      "src/helpers/helper.php"
+    ]
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5"
+  }
+}
