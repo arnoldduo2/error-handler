@@ -25,7 +25,7 @@
       "Anode\\ErrorHandler\\": "src/"
     },
     "files": [
-      "src/helpers/helper.php"
+      "src/helpers/helpers.php"
     ]
   },
   "require-dev": {

@@ -82,10 +82,6 @@ class ErrorView
                $e['message'];
          }
          $msg = 'Exception Server Error: Something didn\'t go right. Try again later or contact support.';
-
-         if (str_contains($e, '1062 Duplicate entry'))
-            $msg = '1062 Duplicate entry for documents is not allowed!';
-
          if ($this->options['app_env'] === 'development')
             $msg = "Exception Server Error: $e";
          echo  json_encode(['type' => 'error', 'msg' => $msg]);

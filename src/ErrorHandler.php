@@ -202,6 +202,7 @@ class ErrorHandler extends Exception
     */
    private function displayError(array|Exception $e): void
    {
+      $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'CLI'; //FOR TESTING PURPOSES ONLY
       $errorView = new ErrorView();
       if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          // Handle AJAX requests.
