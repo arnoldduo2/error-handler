@@ -30,29 +30,34 @@ class ErrorView
 {
 
    private string $baseUrl;
-   private array $options = [
-      'app_env' => 'development',
-      'app_debug' => true,
-      'app_baseUrl' => '/',
-   ];
+   private array $options = [];
    /**
     * Constructor for the ErrorView class.
     * Initializes the base URL based on the set options.
     * @param array {
-    *   app_env: string,
-    *   app_debug: bool,
-    *   app_baseUrl: string,
+    *   name: string,
+    *   env: string,
+    *   debug: bool,
+    *   baseUrl: string,
+    *   error_view: string
     * } An array of options to configure the error view. These options can be used to customize the behavior of the error view.
     * The default options are:
-    *   - app_env: The application environment (e.g., 'development', 'production').
-    *   - app_debug: A boolean indicating whether to display detailed error messages (true) or user-friendly messages (false).
-    *   - app_baseUrl: The base URL of the application. 
+    *   - env: The application environment (e.g., 'development', 'production'). Default is 'development'.
+    *   - debug: A boolean indicating whether to display detailed error messages (true) or user-friendly messages (false). Default is true.
+    *   - baseUrl: The base URL of the application. Default is '/'.
+    *   - error_view: The path to the error view file. Default is __DIR__ . '/../../views/user.php'.
     */
    public function __construct($options = [])
    {
-      $this->options = array_merge($this->options, $options);
+      $this->options = [
+         "name" => $options["name"] ?? 'Anode Error Handler',
+         'env' => $options['env'] ?? 'development',
+         'debug' => $options['debug'] ?? true,
+         'baseUrl' => $options['baseUrl'] ?? '/',
+         'error_view' => $options['error_view'] ?? __DIR__ . '/../../views/user.php',
+      ];
 
-      $this->baseUrl = $this->options['app_baseUrl'] ?? '/';
+      $this->baseUrl = $this->options['baseUrl'] ?? '/';
       if (str_contains($this->baseUrl, 'http')) {
          $this->baseUrl = str_replace('http://', '', $this->baseUrl);
          $this->baseUrl = str_replace('https://', '', $this->baseUrl);
@@ -66,23 +71,23 @@ class ErrorView
     * @throws \Exception
     * @return void
     */
-   public function display($e, $requestMethod = 'POST'): void
+   final public function display($e, $requestMethod = 'POST'): void
    {
       if ($requestMethod === 'GET') {
          http_response_code(500);
-         if ($this->options['app_env'] === 'development')
-            echo $this->view('error', $this->e_all($e));
-         if ($this->options['app_env'] === 'production')
-            echo $this->view('__500', $this->e_none($e));
+         if ($this->options['env'] === 'development')
+            echo $this->view('handler', $this->e_all($e));
+         if ($this->options['env'] === 'production')
+            echo $this->view($this->options['error_view'], $this->e_none($e));
          exit;
       } else {
          if (is_array($e)) {
-            $e = ($this->options['app_debug']) ?
+            $e = ($this->options['debug']) ?
                "Error {$this->errorType($e['code'])}: {$e['message']} in file {$e['file']} on line {$e['line']}" :
                $e['message'];
          }
          $msg = 'Exception Server Error: Something didn\'t go right. Try again later or contact support.';
-         if ($this->options['app_env'] === 'development')
+         if ($this->options['env'] === 'development')
             $msg = "Exception Server Error: $e";
          echo  json_encode(['type' => 'error', 'msg' => $msg]);
       }
@@ -96,7 +101,7 @@ class ErrorView
     */
    private function view(string $view, array $data): string
    {
-      $viewFile = __DIR__ . "/view/$view.php";
+      $viewFile = parseDir(__DIR__ . "/views/$view.php");
       if (file_exists($viewFile)) {
          extract($data);
          if (ob_get_status()) ob_clean();
@@ -125,7 +130,7 @@ class ErrorView
     * @param Exception $e The exception to handle.
     * @return array|bool An array of error details or false if not an exception.
     */
-   public function e_all(Exception $e): array|bool
+   private function e_all(Exception $e): array|bool
    {
       if (!$this->isException($e)) return false;
       $args = isset($e->getTrace()[0]['args'][0]) ? $e->getTrace()[0]['args'] : ($e->getTrace()[0]['args'] ?? null);
@@ -137,6 +142,7 @@ class ErrorView
          'function' => $e->getTrace()[0]['function'],
          'type' => $e->getTrace()[0]['type'] ?? '->',
          'message' => $e->getMessage(),
+         'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
          'color' => $this->errorTypeColor($e->getCode()),
          'backtrace' => $this->backTrace($e),
@@ -153,6 +159,7 @@ class ErrorView
          'function' => $e->getTrace()[1]['function'] ?? $e->getTrace()[0]['function'] ?? 'handleError',
          'type' => $e->getTrace()[1]['type'] ?? $e->getTrace()[0]['type'] ?? '->',
          'message' => $e->getMessage(),
+         'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
          'color' => $this->errorTypeColor((int)$e->getTrace()[0]['args'][0] ?? $e->getCode()),
          'backtrace' => $this->backTrace($e),
@@ -170,14 +177,15 @@ class ErrorView
     * @param Exception $e The exception to handle.
     * @return array|bool An array of user-friendly error message to display or false if not an exception.
     */
-   public function e_none(Exception $e): array|bool
+   private function e_none(Exception $e): array|bool
    {
       if (!$this->isException($e)) return false;
       return [
          'backtrace' => $this->backTrace($e),
          'status_code' => 500,
+         'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
-         'message' => $this->options['app_debug'] ?
+         'message' => $this->options['debug'] ?
             $e->getMessage() :
             'An error occurred on the server. Please Contact your Administrator or try again later.',
       ];
@@ -188,7 +196,7 @@ class ErrorView
     * @param int $type The error type.
     * @return bool True if the error type is fatal, false otherwise.
     */
-   public function errorType(int $type): string
+   private function errorType(int $type): string
    {
       return match ($type) {
          E_ERROR => 'ERROR',
@@ -247,7 +255,7 @@ class ErrorView
     */
    private function backTrace($e): string
    {
-      return $this->view('trace', [
+      return $this->view('components/trace', [
          'backtrace' => $e->getTraceAsString(),
       ]);
    }

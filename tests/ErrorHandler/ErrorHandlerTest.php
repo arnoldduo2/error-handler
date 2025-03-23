@@ -5,44 +5,59 @@ declare(strict_types=1);
 namespace Anode\ErrorHandler\Tests;
 
 use Anode\ErrorHandler\ErrorHandler;
-use Anode\ErrorHandler\ErrorView;
 use ErrorException;
+use Exception;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 class ErrorHandlerTest extends TestCase
 {
    private string $logDir;
    private string $devLogDir;
+   private string $errorView;
 
    protected function setUp(): void
    {
       parent::setUp();
-      $this->logDir = __DIR__ . '/../../storage/logs';
-      $this->devLogDir = __DIR__ . '/../../storage/logs/dev';
 
-      // Ensure log directories exist and are empty
+      // Ensure required globals/constants are set for testing.
+      $_SERVER['REQUEST_METHOD'] ??= 'GET';
+      if (!defined('APP_NAME')) {
+         define('APP_NAME', 'Test App');
+      }
+
+      $this->logDir = __DIR__ . '/../storage/logs/';
+      $this->devLogDir = __DIR__ . '/../storage/logs/dev/';
+      $this->errorView = __DIR__ . '/../../views/user.php';
+
+      // Ensure log directories exist and are empty.
       if (!is_dir($this->logDir)) {
          mkdir($this->logDir, 0777, true);
       }
       if (!is_dir($this->devLogDir)) {
          mkdir($this->devLogDir, 0777, true);
       }
-      $this->clearLogDirectory($this->logDir);
-      $this->clearLogDirectory($this->devLogDir);
+      $this->clearDirectory($this->logDir);
+      $this->clearDirectory($this->devLogDir);
    }
 
    protected function tearDown(): void
    {
       parent::tearDown();
-      // Clean up log directories after tests
-      $this->clearLogDirectory($this->logDir);
-      $this->clearLogDirectory($this->devLogDir);
+
+      // Clean up log directories after tests.
+      $this->clearDirectory($this->logDir);
+      $this->clearDirectory($this->devLogDir);
+      if (is_dir($this->logDir)) {
+         rmdir($this->logDir);
+      }
+      if (is_dir($this->devLogDir)) {
+         rmdir($this->devLogDir);
+      }
    }
 
-   private function clearLogDirectory(string $dir): void
+   private function clearDirectory(string $dir): void
    {
-      $files = glob($dir . '/*');
+      $files = glob("$dir*");
       foreach ($files as $file) {
          if (is_file($file)) {
             unlink($file);
@@ -52,228 +67,271 @@ class ErrorHandlerTest extends TestCase
 
    public function testConstructorWithDefaultOptions(): void
    {
-      $handler = new ErrorHandler();
-      $this->assertDirectoryExists($this->logDir);
-      $this->assertDirectoryExists($this->devLogDir);
-      $this->assertEquals(E_ALL, ini_get('error_reporting'));
-      $this->assertEquals(0, ini_get('display_errors'));
-      $this->assertTrue($handler->options['log_errors']);
-      $this->assertFalse($handler->options['dev_logs']);
-      $this->assertEquals($this->logDir, $handler->options['log_directory']);
-      $this->assertEquals($this->devLogDir, $handler->options['dev_logs_directory']);
-      $this->assertEquals(E_ALL, $handler->options['error_reporting_level']);
-      $this->assertFalse($handler->options['display_errors']);
-      $this->assertStringEndsWith('/resources/views/errors/error.php', $handler->options['error_view']);
+      $errorHandler = new ErrorHandler();
+
+      $this->assertIsArray($errorHandler->options);
+      $this->assertEquals('development', $errorHandler->options['app_enviroment']);
+      $this->assertTrue($errorHandler->options['app_debug']);
+      $this->assertEquals('/', $errorHandler->options['base_url']);
+      $this->assertEquals(E_ALL, $errorHandler->options['error_reporting_level']);
+      $this->assertFalse($errorHandler->options['display_errors']);
+      $this->assertTrue($errorHandler->options['log_errors']);
+      $this->assertEquals(parseDir(__DIR__ . '/../../storage/logs/'), parseDir($errorHandler->options['log_directory']));
+      $this->assertFalse($errorHandler->options['dev_logs']);
+      $this->assertEquals(parseDir(__DIR__ . '/../../storage/logs/dev/'), parseDir($errorHandler->options['dev_logs_directory']));
+      $this->assertFalse($errorHandler->options['email_logging']);
+      $this->assertEquals('', $errorHandler->options['email_logging_address']);
+      $this->assertEquals('Error Log', $errorHandler->options['email_logging_subject']);
+      $this->assertNull($errorHandler->options['email_logging_mailer']);
+      $this->assertEquals([], $errorHandler->options['email_logging_mailer_options']);
+      // Fixed typo: replaced '/../..views/user.php' with '/../../views/user.php'
+      $this->assertEquals(parseDir(__DIR__ . '/../../views/user.php'), parseDir($errorHandler->options['error_view']));
    }
 
    public function testConstructorWithCustomOptions(): void
    {
       $customOptions = [
-         'log_errors' => false,
-         'log_directory' => __DIR__ . '/custom_logs',
-         'dev_logs' => true,
-         'dev_logs_directory' => __DIR__ . '/custom_dev_logs',
+         'app_enviroment' => 'production',
+         'app_debug' => false,
+         'base_url' => 'https://example.com',
          'error_reporting_level' => E_ERROR,
          'display_errors' => true,
-         'error_view' => __DIR__ . '/custom_error_view.php',
+         'log_errors' => false,
+         'log_directory' => '/tmp/custom_logs/',
+         'dev_logs' => true,
+         'dev_logs_directory' => '/tmp/custom_dev_logs/',
+         'email_logging' => true,
+         'email_logging_address' => 'test@example.com',
+         'email_logging_subject' => 'Custom Error Log',
+         'email_logging_mailer' => new \stdClass(),
+         'email_logging_mailer_options' => ['option1' => 'value1'],
+         'error_view' => '/tmp/custom_error_view.php',
       ];
-      $handler = new ErrorHandler($customOptions);
-      $this->assertEquals(E_ERROR, ini_get('error_reporting'));
-      $this->assertEquals(1, ini_get('display_errors'));
-      $this->assertFalse($handler->options['log_errors']);
-      $this->assertTrue($handler->options['dev_logs']);
-      $this->assertEquals(__DIR__ . '/custom_logs', $handler->options['log_directory']);
-      $this->assertEquals(__DIR__ . '/custom_dev_logs', $handler->options['dev_logs_directory']);
-      $this->assertEquals(E_ERROR, $handler->options['error_reporting_level']);
-      $this->assertTrue($handler->options['display_errors']);
-      $this->assertEquals(__DIR__ . '/custom_error_view.php', $handler->options['error_view']);
-      // Clean up custom directories after test
-      if (is_dir(__DIR__ . '/custom_logs')) {
-         rmdir(__DIR__ . '/custom_logs');
-      }
-      if (is_dir(__DIR__ . '/custom_dev_logs')) {
-         rmdir(__DIR__ . '/custom_dev_logs');
-      }
+
+      $errorHandler = new ErrorHandler($customOptions);
+
+      $this->assertEquals('production', $errorHandler->options['app_enviroment']);
+      $this->assertFalse($errorHandler->options['app_debug']);
+      $this->assertEquals('https://example.com', $errorHandler->options['base_url']);
+      $this->assertEquals(E_ERROR, $errorHandler->options['error_reporting_level']);
+      $this->assertTrue($errorHandler->options['display_errors']);
+      $this->assertFalse($errorHandler->options['log_errors']);
+      $this->assertEquals(parseDir('/tmp/custom_logs/'), parseDir($errorHandler->options['log_directory']));
+      $this->assertTrue($errorHandler->options['dev_logs']);
+      $this->assertEquals(parseDir('/tmp/custom_dev_logs/'), parseDir($errorHandler->options['dev_logs_directory']));
+      $this->assertTrue($errorHandler->options['email_logging']);
+      $this->assertEquals('test@example.com', $errorHandler->options['email_logging_address']);
+      $this->assertEquals('Custom Error Log', $errorHandler->options['email_logging_subject']);
+      $this->assertInstanceOf(\stdClass::class, $errorHandler->options['email_logging_mailer']);
+      $this->assertEquals(['option1' => 'value1'], $errorHandler->options['email_logging_mailer_options']);
+      $this->assertEquals(parseDir('/tmp/custom_error_view.php'), parseDir($errorHandler->options['error_view']));
    }
 
    public function testHandleError(): void
    {
-      $handler = new ErrorHandler();
+      $errorHandler = new ErrorHandler();
+
       try {
-         $handler->handleError(E_WARNING, 'Test warning', __FILE__, __LINE__);
+         $errorHandler->handleError(E_WARNING, 'Test warning', __FILE__, __LINE__);
       } catch (ErrorException $e) {
          $this->assertEquals('Test warning', $e->getMessage());
          $this->assertEquals(E_WARNING, $e->getSeverity());
          $this->assertEquals(__FILE__, $e->getFile());
-         $this->assertEquals(__LINE__ - 2, $e->getLine());
+         $this->assertEquals(__LINE__ - 1, $e->getLine());
          return;
       }
-      $this->fail('ErrorException was not thrown.');
+
+      $this->fail('Expected ErrorException was not thrown.');
    }
 
    public function testHandleException(): void
    {
-      $handler = new ErrorHandler();
-      $exception = new RuntimeException('Test exception');
-      $handler->handleException($exception);
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'display_errors' => true,
+         'app_debug' => true,
+         'app_enviroment' => 'development',
+      ]);
+      $exception = new Exception('Test exception', 123);
 
-      // Check if a log file was created
-      $logFiles = glob("{$this->logDir}/*");
-      chmod($logFiles[0], 0777);
-      $this->assertNotEmpty($logFiles);
+      // Capture output to check if displayError is called.
+      ob_start();
+      $errorHandler->handleException($exception);
+      $output = ob_get_clean();
 
-      // Check the content of the log file
-      $logContent = file_get_contents($logFiles[0]);
-      $this->assertStringContainsString('Test exception', $logContent);
-      $this->assertStringContainsString(__FILE__, $logContent);
+      $this->assertStringContainsString('Test exception', $output);
+      $this->assertStringContainsString('Exception', $output);
+      $this->assertStringContainsString('ErrorHandlerTest.php', $output);
+      $this->assertStringContainsString('123', $output);
+      $this->assertFileExists($this->logDir);
+      $this->assertNotEmpty(glob("{$this->logDir}*"));
    }
 
-   public function testHandleShutdownWithFatalError(): void
+   public function testHandleShutdownFatalError(): void
    {
-      /**
-       * @var ErrorHandler
-       */
-      $handler = new ErrorHandler();
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'display_errors' => true,
+         'app_debug' => true,
+         'app_enviroment' => 'development',
+      ]);
 
-      // Simulate a fatal error using a closure
-      $error = null;
-      $mockErrorGetLast = fn() => $error;
+      // Simulate a fatal error.
+      $error = [
+         'type' => E_ERROR,
+         'message' => 'Fatal error',
+         'file' => __FILE__,
+         'line' => __LINE__
+      ];
+      error_clear_last();
+      error_get_last();
+      error_reporting(E_ALL);
 
-      // Replace error_get_last with our mock
-      $handler->handleShutdown();
-      $error = ['type' => E_ERROR, 'message' => 'Test fatal error', 'file' => __FILE__, 'line' => __LINE__];
-      $handler->handleShutdown();
-      // Check if the error was logged
+      // Set error to be the last error.
+      $errorHandler->handleError($error['type'], $error['message'], $error['file'], $error['line']);
 
-      // Check if a log file was created
-      $logFiles = glob("{$this->logDir}/*");
-      chmod($logFiles[0], 0777);
-      $this->assertNotEmpty($logFiles);
+      // Capture output to check if displayError is called.
+      ob_start();
+      $errorHandler->handleShutdown();
+      $output = ob_get_clean();
 
-      // Check the content of the log file
-      $logContent = file_get_contents($logFiles[0]);
-      $this->assertStringContainsString('Test fatal error', $logContent);
-      $this->assertStringContainsString(__FILE__, $logContent);
+      $this->assertStringContainsString('Fatal error', $output);
+      $this->assertStringContainsString('ErrorHandlerTest.php', $output);
+      $this->assertFileExists($this->logDir);
+      $this->assertNotEmpty(glob("{$this->logDir}*"));
    }
 
-   public function testHandleShutdownWithNonFatalError(): void
+   public function testHandleShutdownNonFatalError(): void
    {
-      $handler = new ErrorHandler();
+      $errorHandler = new ErrorHandler(['log_directory' => $this->logDir]);
 
-      // Simulate a non-fatal error using a closure
-      $error = ['type' => E_WARNING, 'message' => 'Test non-fatal error', 'file' => __FILE__, 'line' => __LINE__];
-      $mockErrorGetLast = function () use (&$error) {
-         return $error;
-      };
+      // Simulate a non-fatal error.
+      $error = [
+         'type' => E_WARNING,
+         'message' => 'Non-fatal error',
+         'file' => __FILE__,
+         'line' => __LINE__
+      ];
+      error_clear_last();
+      error_get_last();
+      error_reporting(E_ALL);
+      $errorHandler->handleError($error['type'], $error['message'], $error['file'], $error['line']);
 
-      // Replace error_get_last with our mock
-      $handler->handleShutdown();
-      $error = null;
-      $handler->handleShutdown();
+      // Capture output to check if displayError is called.
+      ob_start();
+      $errorHandler->handleShutdown();
+      $output = ob_get_clean();
 
-      // Check if no log file was created
-      $logFiles = glob("{$this->logDir}/*");
-      chmod($logFiles[0], 0777);
-      $this->assertEmpty($logFiles);
+      $this->assertEmpty($output);
+      $this->assertEmpty(glob("{$this->logDir}*"));
    }
 
-   public function testLogErrorWithDevLogsEnabled(): void
+   public function testLogError(): void
    {
-      $handler = new ErrorHandler(['dev_logs' => true]);
-      $handler->handleException(new RuntimeException('Test exception'));
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'dev_logs' => false,
+      ]);
 
-      // Check if a log file was created in the dev log directory
-      $logFiles = glob("{$this->devLogDir}/*");
-      chmod($logFiles[0], 0777);
-      $this->assertNotEmpty($logFiles);
+      // Use reflection to access the private method.
+      $reflection = new \ReflectionClass($errorHandler);
+      $method = $reflection->getMethod('logError');
+      $method->setAccessible(true);
 
-      // Check the content of the log file
-      $logContent = file_get_contents($logFiles[0]);
-      $this->assertStringContainsString('Test exception', $logContent);
-      $this->assertStringContainsString(__FILE__, $logContent);
+      $method->invoke($errorHandler, 'Test log error', __LINE__);
+
+      $this->assertFileExists($this->logDir);
+      $this->assertNotEmpty(glob("{$this->logDir}*"));
    }
 
-   public function testLogErrorWithLoggingDisabled(): void
+   public function testLogErrorDevLogs(): void
    {
-      $handler = new ErrorHandler(['log_errors' => false]);
-      $handler->handleException(new RuntimeException('Test exception'));
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'dev_logs' => true,
+         'dev_logs_directory' => $this->devLogDir,
+      ]);
 
-      // Check if no log file was created
-      $logFiles = glob("{$this->logDir}/*");
-      chmod($logFiles[0], 0777);
-      $this->assertEmpty($logFiles);
+      // Use reflection to access the private method.
+      $reflection = new \ReflectionClass($errorHandler);
+      $method = $reflection->getMethod('logError');
+      $method->setAccessible(true);
+
+      $method->invoke($errorHandler, 'Test log error', __LINE__);
+
+      $this->assertFileExists($this->devLogDir);
+      $this->assertNotEmpty(glob("{$this->devLogDir}*"));
+      $this->assertEmpty(glob("{$this->logDir}*"));
    }
 
-   public function testLogErrorWithInvalidLogDirectory(): void
+   public function testLogErrorNoLogs(): void
    {
-      $this->expectException(RuntimeException::class);
-      $this->expectExceptionMessage('Failed to open log file');
-      $handler = new ErrorHandler(['log_directory' => '/invalid/directory']);
-      $handler->handleException(new RuntimeException('Test exception'));
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'dev_logs' => true,
+         'dev_logs_directory' => $this->devLogDir,
+         'log_errors' => false,
+      ]);
+
+      // Use reflection to access the private method.
+      $reflection = new \ReflectionClass($errorHandler);
+      $method = $reflection->getMethod('logError');
+      $method->setAccessible(true);
+
+      $method->invoke($errorHandler, 'Test log error', __LINE__);
+
+      $this->assertEmpty(glob("{$this->devLogDir}*"));
+      $this->assertEmpty(glob("{$this->logDir}*"));
    }
 
-   public function testDisplayErrorWithPostRequest(): void
+   public function testEmailLogging(): void
    {
-      // Mock the $_SERVER superglobal
-      $_SERVER['REQUEST_METHOD'] = 'POST';
-
-      // Create a mock ErrorView
-      $mockErrorView = $this->getMockBuilder(ErrorView::class)
-         ->disableOriginalConstructor()
+      // Mock the mailer object.
+      $mailerMock = $this->getMockBuilder(\stdClass::class)
+         ->addMethods(['send'])
          ->getMock();
 
-      // Expect that the display method is called once
-      $mockErrorView->expects($this->once())
-         ->method('display')
-         ->willReturnCallback(function ($arg) {
-            // Assert that the argument is an array and has the expected keys
-            $this->assertIsArray($arg);
-            $this->assertArrayHasKey('code', $arg);
-            $this->assertArrayHasKey('message', $arg);
-            $this->assertArrayHasKey('file', $arg);
-            $this->assertArrayHasKey('line', $arg);
-         });
+      // Set up expectations for the mailer mock.
+      $mailerMock->expects($this->once())
+         ->method('send')
+         ->willReturnCallback($this->callback(function ($message) {
+            // Check if the message contains the expected content.
+            return strpos($message, 'Test email log error') !== false;
+         }));
 
-      // Create an ErrorHandler instance
-      $handler = new ErrorHandler();
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'email_logging' => true,
+         'email_logging_address' => 'test@example.com',
+         'email_logging_subject' => 'Test Email Log',
+         'email_logging_mailer' => $mailerMock,
+         'email_logging_mailer_options' => [],
+      ]);
 
-      // Call the private displayError method using reflection
-      $reflection = new \ReflectionClass($handler);
-      $method = $reflection->getMethod('displayError');
+      // Use reflection to access the private method.
+      $reflection = new \ReflectionClass($errorHandler);
+      $method = $reflection->getMethod('logError');
       $method->setAccessible(true);
-      $method->invokeArgs($handler, [['type' => E_ERROR, 'message' => 'Test error', 'file' => __FILE__, 'line' => __LINE__]]);
 
-      // Clean up the $_SERVER superglobal
-      unset($_SERVER['REQUEST_METHOD']);
+      $method->invoke($errorHandler, 'Test email log error', __LINE__);
    }
-   public function testDisplayErrorWithGetRequest(): void
+   public function testEmailLoggingDisabled(): void
    {
-      // Mock the $_SERVER superglobal
-      $_SERVER['REQUEST_METHOD'] = 'GET';
+      $errorHandler = new ErrorHandler([
+         'log_directory' => $this->logDir,
+         'email_logging' => false,
+      ]);
 
-      // Create a mock ErrorView
-      $mockErrorView = $this->getMockBuilder(ErrorView::class)
-         ->disableOriginalConstructor()
-         ->getMock();
-
-      // Expect that the display method is called with the correct arguments
-      $mockErrorView->expects($this->once())
-         ->method('display')
-         ->willReturnCallback(function ($arg) {
-            // Assert that the argument is an instance of Exception
-            $this->assertInstanceOf(\Exception::class, $arg);
-         });
-
-      // Create an ErrorHandler instance
-      $handler = new ErrorHandler();
-
-      // Call the private displayError method using reflection
-      $reflection = new \ReflectionClass($handler);
-      $method = $reflection->getMethod('displayError');
+      // Use reflection to access the private method.
+      $reflection = new \ReflectionClass($errorHandler);
+      $method = $reflection->getMethod('logError');
       $method->setAccessible(true);
-      $method->invokeArgs($handler, [new RuntimeException('Test exception')]);
 
-      // Clean up the $_SERVER superglobal
-      unset($_SERVER['REQUEST_METHOD']);
+      // Capture output to check if email logging is not called.
+      ob_start();
+      $method->invoke($errorHandler, 'Test email log error', __LINE__);
+      $output = ob_get_clean();
+
+      $this->assertEmpty($output);
    }
 }

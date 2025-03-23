@@ -1,0 +1,12 @@
+Test exception in D:\APPDEV\php-projects\errorhandler\tests\ErrorHandler\ErrorHandlerTest.php on line 155
+#0 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\Framework\TestCase.php(1617): Anode\ErrorHandler\Tests\ErrorHandlerTest->testHandleException()
+#1 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\Framework\TestCase.php(1223): PHPUnit\Framework\TestCase->runTest()
+#2 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\Framework\TestResult.php(729): PHPUnit\Framework\TestCase->runBare()
+#3 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\Framework\TestCase.php(973): PHPUnit\Framework\TestResult->run(Object(Anode\ErrorHandler\Tests\ErrorHandlerTest))
+#4 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\Framework\TestSuite.php(685): PHPUnit\Framework\TestCase->run(Object(PHPUnit\Framework\TestResult))
+#5 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\TextUI\TestRunner.php(651): PHPUnit\Framework\TestSuite->run(Object(PHPUnit\Framework\TestResult))
+#6 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\TextUI\Command.php(146): PHPUnit\TextUI\TestRunner->run(Object(PHPUnit\Framework\TestSuite), Array, Array, true)
+#7 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\src\TextUI\Command.php(99): PHPUnit\TextUI\Command->run(Array, true)
+#8 D:\APPDEV\php-projects\errorhandler\vendor\phpunit\phpunit\phpunit(107): PHPUnit\TextUI\Command::main()
+#9 D:\APPDEV\php-projects\errorhandler\vendor\bin\phpunit(122): include('D:\\APPDEV\\php-p...')
+#10 {main}
