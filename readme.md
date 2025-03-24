@@ -119,6 +119,13 @@ $errorHandler = new ErrorHandler([
 
 trigger_error("This is a test error.", E_USER_WARNING);
 ```
+##Screenshots
+![Screenshot 2025-03-24 222510](https://github.com/user-attachments/assets/1ea94a23-a6c7-470e-8649-cef130c21d87)
+![production without debug enabled](https://github.com/user-attachments/assets/b4976209-cb01-4841-a0dc-1d9b121b66b0)
+![production with debug enabled](https://github.com/user-attachments/assets/42a351f0-565b-4972-a4b0-0fbffc09dd4d)
+![Screenshot 2025-03-24 222932](https://github.com/user-attachments/assets/9122ea29-c85d-4030-9a6f-440bf2410eb5)
+![Screenshot 2025-03-24 222845](https://github.com/user-attachments/assets/06ede249-f1e0-4578-acca-582c4c4508db)
+
 
 ## Contributing
 
