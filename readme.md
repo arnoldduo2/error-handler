@@ -60,9 +60,6 @@ A robust, customizable, and developer-friendly error handler for PHP application
         'log_directory' => __DIR__ . '/storage/logs/',
         'dev_logs' => true,
         'dev_logs_directory' => __DIR__ . '/storage/logs/dev/',
-        'email_logging' => true,
-        'email_logging_address' => 'admin@myapp.com',
-        'email_logging_subject' => 'Production Error',
         'error_view' => __DIR__ . '/views/user.php',
         // ... other options
     ]);
@@ -113,10 +110,11 @@ throw new Exception("This is a test exception.");
 use Anode\ErrorHandler\ErrorHandler;
 
 $errorHandler = new ErrorHandler([
-    'log_directory' => __DIR__ . '/logs/',
     'email_logging' => true,
     'email_logging_address' => 'admin@example.com',
     'email_logging_subject' => 'Critical Error',
+    'email_logging_mailer' => new PHPMailer(), //Exposes the send method
+    'email_logging_mailer_options' => [], // An array of your mailer object options
 ]);
 
 trigger_error("This is a test error.", E_USER_WARNING);

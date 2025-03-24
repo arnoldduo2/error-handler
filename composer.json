@@ -16,8 +16,15 @@
       "homepage": "https://github.com/arnoldduo2"
     }
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/arnoldduo2/error-handler.git"
+    }
+  ],
   "require": {
-    "php": "^8.0"
+    "php": "^8.0",
+    "arnoldduo2/error-handler": "dev-main"
   },
   "autoload": {
     "psr-4": {
