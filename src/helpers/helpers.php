@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 
-if (!function_exists('parseDir')) {
+if (!function_exists('dd')) {
    function dd(...$e)
    {
       echo '<pre>';
@@ -11,14 +11,16 @@ if (!function_exists('parseDir')) {
       echo '</pre>';
       die;
    }
-
+}
+if (!function_exists('dump')) {
    function dump(...$e): void
    {
       echo '<pre>';
       print_r($e);
       echo '</pre>';
    }
-
+}
+if (!function_exists('vd')) {
    function vd(...$e): void
    {
       echo '<pre>';
@@ -26,7 +28,9 @@ if (!function_exists('parseDir')) {
       echo '</pre>';
       die;
    }
+}
 
+if (!function_exists('parseDir')) {
    /**
     * Parse the directory path to ensure it uses the correct directory separator for the current operating system.
     * @param string $dir The directory path to parse.
