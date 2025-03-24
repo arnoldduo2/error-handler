@@ -2,5 +2,5 @@
 
 declare(strict_types=1);
 
-const EDD_VERSION = egitVersion() ?? '1.0.0';
-const EDD_VERSION_NAME = egitCommitHash() ?? 'Initial Release';
+define('EDD_VERSION', egetVersion() ?? 'v0.0.0');
+define('EDD_VERSION_NAME', egitCommitHash() ?? 'Initial Release');

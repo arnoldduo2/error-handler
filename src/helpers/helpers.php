@@ -41,12 +41,30 @@ if (!function_exists('eparseDir')) {
       return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
    }
 }
+if (!function_exists('egetVersion')) {
+   /**
+    * Get the current version of the application, from a composer.json file.
+    * @param string|null $filePath The path to the composer.json file. If null, defaults to the current directory.
+    * @return string The current version.
+    */
+   function egetVersion(?string $filePath = null): ?string
+   {
+      $composerFile = $filePath ?? __DIR__ . '/../../composer.json';
+      if (file_exists($composerFile)) {
+         $composerData = json_decode(file_get_contents($composerFile), true);
+         if (isset($composerData['version'])) {
+            return $composerData['version'];
+         }
+      }
+      return null;
+   }
+}
 if (!function_exists('egitVersion')) {
    function egitVersion(): ?string
    {
-      $tag = shell_exec('git describe --tags --abbrev=0');
-      if ($tag === null) {
-         return null; // No tags found
+      $tag = shell_exec('git describe --tags --abbrev=0 2>&1'); // Get the latest tag
+      if (strpos($tag, 'fatal') !== false || $tag === null) {
+         return null; // No tags found or Git error
       }
       return trim($tag);
    }

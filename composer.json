@@ -16,6 +16,7 @@
       "homepage": "https://github.com/arnoldduo2"
     }
   ],
+  "version": "v1.0.19",
   "repositories": [
     {
       "type": "vcs",
