@@ -152,12 +152,11 @@ class ErrorView
     */
    private function e_all(mixed $e): array|bool
    {
-
       if (is_array($e)) return $e;
       if (!$this->isException($e) || !$this->isError($e))
          return $this->e_unkown();
       $args = isset($e->getTrace()[0]['args'][0]) ? $e->getTrace()[0]['args'] : ($e->getTrace()[0]['args'] ?? null);
-
+      // dd($e);
       return (!$args) ? [
          'status_code' => 500,
          'object' => get_class($e) ?? 'Exception',
@@ -188,7 +187,7 @@ class ErrorView
          'backtrace' => $this->backTrace($e),
          'args' => [
             'type' => $this->errorType(type: (int)$e->getTrace()[0]['args'][0] ?? $e->getCode()),
-            'message' => $e->getTrace()[0]['args'][1] && is_string($e->getTrace()[0]['args'][1]) ? $e->getTrace()[0]['args'][1] : $e->getMessage(),
+            'message' => isset($e->getTrace()[0]['args'][1]) && is_string($e->getTrace()[0]['args'][1]) ? $e->getTrace()[0]['args'][1] : $e->getMessage(),
             'file' => $e->getTrace()[0]['args'][2] ?? $e->getFile(),
             'line' => $e->getTrace()[0]['args'][3] ?? $e->getLine(),
          ]
