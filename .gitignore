@@ -1,0 +1,39 @@
+# Composer
+/vendor/
+composer.lock
+
+# Logs
+*.log
+/logs/
+/var/log/
+
+# Cache
+/cache/
+/var/cache/
+*.cache
+.phpunit.result.cache
+
+# Temporary files
+*.tmp
+*.bak
+*~
+/.idea/
+/.vscode/
+
+# Environment files
+.env
+.env.*
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+
+# PHPUnit coverage reports
+/coverage/
+
+# Debug files
+xdebug.log
+
+# Other
+npm-debug.log
+yarn-error.log

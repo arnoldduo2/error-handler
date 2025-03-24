@@ -26,7 +26,7 @@ A robust, customizable, and developer-friendly error handler for PHP application
 
     - Clone the repository:
       ```bash
-      git clone https://github.com/anoldduo2/php-errorhandler-plugin.git
+      git clone https://github.com/anoldduo2/error-handler.git
       ```
     - Install dependencies (if any) via Composer:
       ```bash
@@ -63,12 +63,15 @@ A robust, customizable, and developer-friendly error handler for PHP application
         'email_logging' => true,
         'email_logging_address' => 'admin@myapp.com',
         'email_logging_subject' => 'Production Error',
-        'error_view' => __DIR__ . '/views/error.php',
+        'error_view' => __DIR__ . '/views/user.php',
         // ... other options
     ]);
     ```
 
-    **Note:** The `ErrorHandler` constructor automatically registers itself as the error, exception, and shutdown handler. No need for a separate `register()` method.
+    **Note:**
+    **1.** The `ErrorHandler` constructor automatically registers itself as the error, exception, and shutdown handler. No need for a separate `register()` method.
+    **2.** You can create your own custom error_view that diplays the user E500 - Internal Server Error page. This is most crucial if you want to maintain consistancy of your error pages e.g your E404, E403 etc.
+    **3.** In `development` enviroment the E500 page will always provide a fully detail error page that you cannot change, unless you change your enviroment to `production`.
 
 ## Configuration Options
 
@@ -121,7 +124,7 @@ trigger_error("This is a test error.", E_USER_WARNING);
 
 ## Contributing
 
-Contributions are welcome! If you encounter any issues or have suggestions for improvements, feel free to open an issue or submit a pull request on [GitHub](https://github.com/anoldduo2/php-errorhandler-plugin).
+Contributions are welcome! If you encounter any issues or have suggestions for improvements, feel free to open an issue or submit a pull request on [GitHub](https://github.com/anoldduo2/error-handler).
 
 ## License
 
@@ -129,11 +132,11 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contributing
 
-Contributions are welcome! Please submit issues or pull requests via the [GitHub repository](https://github.com/anoldduo2/php-errorhandler-plugin).
+Contributions are welcome! Please submit issues or pull requests via the [GitHub repository](https://github.com/anoldduo2/error-handler).
 
 ## Support
 
-If you have any questions or need help, feel free to reach out via [GitHub Issues](https://github.com/anoldduo2/php-errorhandler-plugin/issues).
+If you have any questions or need help, feel free to reach out via [GitHub Issues](https://github.com/anoldduo2/error-handler/issues).
 
 ---
 
@@ -141,4 +144,4 @@ This README file should now provide a comprehensive overview of your project, in
 
 ## Acknowledgements
 
-Created by Anode.
+Created by Arnold Tinashe Samhungu.

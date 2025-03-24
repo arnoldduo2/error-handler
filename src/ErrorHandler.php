@@ -18,11 +18,6 @@ use Exception;
 class ErrorHandler extends Exception
 {
    /**
-    * The directory where error logs are saved.
-    * @var string
-    */
-   private string $logDir;
-   /**
     * Error code.
     * @var int
     */
@@ -122,10 +117,6 @@ class ErrorHandler extends Exception
       ini_set('display_errors', $this->options['display_errors']);
       ini_set('error_reporting', $this->options['error_reporting_level']);
 
-      // Set the error log Directory path.
-      $this->logDir = parseDir($this->options['log_directory']);
-
-
       // Handle PHP errors as exceptions.
       set_error_handler([$this, 'handleError']);
 
@@ -147,10 +138,9 @@ class ErrorHandler extends Exception
     */
    public function handleError(int $severity, string $message, string $file, int $line): bool
    {
-      if (!(error_reporting() & $severity)) {
-         // This error is not included in error_reporting.
-         return false;
-      }
+      // This error is not included in error_reporting.
+      if (!(error_reporting() & $severity)) return false;
+
       // Convert error to an ErrorException.
       throw new ErrorException($message, $this->code, $severity, $file, $line);
    }
@@ -259,10 +249,4 @@ class ErrorHandler extends Exception
             ]);
       } else $errorView->display($e, 'GET'); // Handle non-AJAX requests.
    }
-
-   /**
-    * Parse the directory path to ensure it uses the correct directory separator for the current operating system.
-    * @param string $dir The directory path to parse.
-    * @return string The parsed directory path.
-    */
 }
