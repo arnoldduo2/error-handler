@@ -12,265 +12,265 @@
    <link rel="manifest" href="<?= $ROOT_PATH ?>/manifest.json">
    <link rel="shortcut icon" href="<?= "$ROOT_PATH/favicon.svg" ?>" type="image/x-icon">
    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
-         integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+      integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/fira_code.min.css"
-         integrity="sha512-MbysAYimH1hH2xYzkkMHB6MqxBqfP0megxsCLknbYqHVwXTCg9IqHbk+ZP/vnhO8UEW6PaXAkKe2vQ+SWACxxA=="
-         crossorigin="anonymous" referrerpolicy="no-referrer" />
+      integrity="sha512-MbysAYimH1hH2xYzkkMHB6MqxBqfP0megxsCLknbYqHVwXTCg9IqHbk+ZP/vnhO8UEW6PaXAkKe2vQ+SWACxxA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <style>
-*:not(i) {
-   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-   /* Change this to your desired font */
-}
+   *:not(i) {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      /* Change this to your desired font */
+   }
 
-body {
-   background-color: #f8f9fa;
-   --danger-color: #f21e50;
-   --danger-border: rgba(181, 23, 60, 0.44);
-   --danger-bg: #f21e4f2b;
-   --success-color: #00a000;
-   --success-bg: #00a0001b;
-   --success-border: rgba(0, 139, 0, 0.44);
-   --warning-color: #ff771d;
-   --warning-bg: #ff771d1c;
-   --warning-border: rgba(194, 91, 22, 0.44);
-   --info-color: #7280fd;
-   --info-bg: #7280fd21;
-   --info-border: rgba(89, 100, 202, 0.44);
-   --card-bg: #f8f8f8;
-   --text-color: #111;
-   --text-gray: #5e5e5e;
-}
+   body {
+      background-color: #f8f9fa;
+      --danger-color: #f21e50;
+      --danger-border: rgba(181, 23, 60, 0.44);
+      --danger-bg: #f21e4f2b;
+      --success-color: #00a000;
+      --success-bg: #00a0001b;
+      --success-border: rgba(0, 139, 0, 0.44);
+      --warning-color: #ff771d;
+      --warning-bg: #ff771d1c;
+      --warning-border: rgba(194, 91, 22, 0.44);
+      --info-color: #7280fd;
+      --info-bg: #7280fd21;
+      --info-border: rgba(89, 100, 202, 0.44);
+      --card-bg: #f8f8f8;
+      --text-color: #111;
+      --text-gray: #5e5e5e;
+   }
 
-body.dark {
-   background-color: #181818;
-   --card-bg: #212121;
-   --text-color: #f8f9fa;
-   --text-gray: #a3a7aa;
-   --danger-color: rgb(144, 33, 59);
-}
+   body.dark {
+      background-color: #181818;
+      --card-bg: #212121;
+      --text-color: #f8f9fa;
+      --text-gray: #a3a7aa;
+      --danger-color: rgb(144, 33, 59);
+   }
 
-.code {
-   font-family: 'Fira Code', monospace;
-}
+   .code {
+      font-family: 'Fira Code', monospace;
+   }
 
-.card {
-   background: var(--card-bg);
-}
+   .card {
+      background: var(--card-bg);
+   }
 
-.container {
-   margin-top: 100px;
-}
+   .container {
+      margin-top: 100px;
+   }
 
-.text-color {
-   color: var(--text-color);
-}
+   .text-color {
+      color: var(--text-color);
+   }
 
-.text-gray {
-   color: var(--text-gray);
-}
+   .text-gray {
+      color: var(--text-gray);
+   }
 
-.fw-bold {
-   font-weight: bold;
-}
+   .fw-bold {
+      font-weight: bold;
+   }
 
-.fw-bolder {
-   font-weight: bolder;
-}
+   .fw-bolder {
+      font-weight: bolder;
+   }
 
-.fw-500 {
-   font-weight: 500;
-}
+   .fw-500 {
+      font-weight: 500;
+   }
 
-.circle {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   border-radius: 50% !important;
-}
+   .circle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50% !important;
+   }
 
-.circle-small {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   border-radius: 50%;
-   width: 30px;
-   height: 30px;
-}
+   .circle-small {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+   }
 
-.circle-medium {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   border-radius: 50%;
-   width: 40px;
-   height: 40px;
-}
+   .circle-medium {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+   }
 
-.circle-large {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   border-radius: 50%;
-   width: 50px;
-   height: 50px;
-}
+   .circle-large {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+   }
 
-.raised {
-   box-shadow: 0 0 3px rgba(0, 0, 0, 0.275);
-}
+   .raised {
+      box-shadow: 0 0 3px rgba(0, 0, 0, 0.275);
+   }
 
-.rounded-2 {
-   border-radius: 0.5rem;
-}
+   .rounded-2 {
+      border-radius: 0.5rem;
+   }
 
-.rounded-3 {
-   border-radius: 1rem;
-}
+   .rounded-3 {
+      border-radius: 1rem;
+   }
 
-.rounded-4 {
-   border-radius: 1.5rem;
-}
+   .rounded-4 {
+      border-radius: 1.5rem;
+   }
 
-/** Alerts */
+   /** Alerts */
 
-.alert-danger {
-   color: var(--danger-color) !important;
-   background-color: var(--danger-bg);
-   border-color: var(--danger-border);
-}
+   .alert-danger {
+      color: var(--danger-color) !important;
+      background-color: var(--danger-bg);
+      border-color: var(--danger-border);
+   }
 
-.alert-success {
-   color: var(--success-color);
-   background-color: var(--success-bg);
-   border-color: var(--success-border);
-}
+   .alert-success {
+      color: var(--success-color);
+      background-color: var(--success-bg);
+      border-color: var(--success-border);
+   }
 
-.alert-warning {
-   color: var(--warning-color);
-   background-color: var(--warning-bg);
-   border-color: var(--warning-border);
-}
+   .alert-warning {
+      color: var(--warning-color);
+      background-color: var(--warning-bg);
+      border-color: var(--warning-border);
+   }
 
-.alert-info {
-   color: var(--info-color);
-   background-color: var(--info-bg);
-   border-color: var(--info-border);
-}
+   .alert-info {
+      color: var(--info-color);
+      background-color: var(--info-bg);
+      border-color: var(--info-border);
+   }
 
-.table {
-   width: 100%;
-   border: none !important;
-   padding: 5px;
-   border-collapse: separate;
-}
+   .table {
+      width: 100%;
+      border: none !important;
+      padding: 5px;
+      border-collapse: separate;
+   }
 
-.table th,
-.table td {
-   border: 1px solid var(--card-bg);
-   padding: 10px;
-}
-
-
-.alert-danger .table th,
-.alert-danger .table td {
-   border: 1px solid var(--danger-border);
-   color: var(--danger-color);
-}
-
-.alert-warning .table th,
-.alert-warning .table td {
-   border: 1px solid var(--warning-border);
-   color: var(--warning-color);
-}
-
-.alert-info .table th,
-.alert-info .table td {
-   border: 1px solid var(--info-border);
-   color: var(--info-color);
-}
+   .table th,
+   .table td {
+      border: 1px solid var(--card-bg);
+      padding: 10px;
+   }
 
 
-.alert-success .table th,
-.alert-success .table td {
-   border: 1px solid var(--success-border);
-   color: var(--success-color);
-}
+   .alert-danger .table th,
+   .alert-danger .table td {
+      border: 1px solid var(--danger-border);
+      color: var(--danger-color);
+   }
 
-.back-btn {
-   color: var(--text-color);
-   padding: 10px 20px;
-   text-decoration: none;
-   cursor: pointer;
-   transition: all 0.3s;
-}
+   .alert-warning .table th,
+   .alert-warning .table td {
+      border: 1px solid var(--warning-border);
+      color: var(--warning-color);
+   }
 
-.back-btn:hover {
-   color: var(--success-color);
-   opacity: 0.8;
-}
+   .alert-info .table th,
+   .alert-info .table td {
+      border: 1px solid var(--info-border);
+      color: var(--info-color);
+   }
 
-/* Nav Tab Buttons */
-.nav-tabs {
-   border: none !important;
-}
 
-.nav-link {
-   border-radius: 0 !important;
-   color: var(--text-color);
-   background-color: var(--card-bg);
-   border: none !important;
-}
+   .alert-success .table th,
+   .alert-success .table td {
+      border: 1px solid var(--success-border);
+      color: var(--success-color);
+   }
 
-.nav-link:hover {
-   filter: brightness(0.8);
-   border: none !important;
-   border-radius: 0 !important;
-}
+   .back-btn {
+      color: var(--text-color);
+      padding: 10px 20px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s;
+   }
 
-.nav-item.danger .nav-link.active,
-.nav-item.danger .nav-link:active {
-   color: var(--danger-color) !important;
-   background-color: var(--danger-bg) !important;
-   border: none !important;
-}
+   .back-btn:hover {
+      color: var(--success-color);
+      opacity: 0.8;
+   }
 
-.nav-item.warning .nav-link.active,
-.nav-item.warning .nav-link:active {
-   color: var(--warning-color) !important;
-   background-color: var(--warning-bg) !important;
-   border: none !important;
-}
+   /* Nav Tab Buttons */
+   .nav-tabs {
+      border: none !important;
+   }
 
-.nav-item.info .nav-link.active,
-.nav-item.info .nav-link:active {
-   color: var(--info-color) !important;
-   background-color: var(--info-bg) !important;
-   border: none !important;
-}
+   .nav-link {
+      border-radius: 0 !important;
+      color: var(--text-color);
+      background-color: var(--card-bg);
+      border: none !important;
+   }
 
-.nav-item.success .nav-link.active,
-.nav-item.success .nav-link:active {
-   color: var(--success-color) !important;
-   background-color: var(--success-bg) !important;
-   border: none !important;
-}
+   .nav-link:hover {
+      filter: brightness(0.8);
+      border: none !important;
+      border-radius: 0 !important;
+   }
+
+   .nav-item.danger .nav-link.active,
+   .nav-item.danger .nav-link:active {
+      color: var(--danger-color) !important;
+      background-color: var(--danger-bg) !important;
+      border: none !important;
+   }
+
+   .nav-item.warning .nav-link.active,
+   .nav-item.warning .nav-link:active {
+      color: var(--warning-color) !important;
+      background-color: var(--warning-bg) !important;
+      border: none !important;
+   }
+
+   .nav-item.info .nav-link.active,
+   .nav-item.info .nav-link:active {
+      color: var(--info-color) !important;
+      background-color: var(--info-bg) !important;
+      border: none !important;
+   }
+
+   .nav-item.success .nav-link.active,
+   .nav-item.success .nav-link:active {
+      color: var(--success-color) !important;
+      background-color: var(--success-bg) !important;
+      border: none !important;
+   }
 </style>
 <script defer>
-document.addEventListener('DOMContentLoaded', () => {
-   $theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-   document.body.classList.add($theme);
-   const btn = document.querySelector('.toggle-theme');
+   document.addEventListener('DOMContentLoaded', () => {
+      $theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.body.classList.add($theme);
+      const btn = document.querySelector('.toggle-theme');
 
-   btn.addEventListener('click', () => {
-      const $icon = document.body.classList.contains('dark') ?
-         "<i class='bx bx-sun text-color'></i>" :
-         "<i class='bx bx-moon text-color'></i>";
-      btn.innerHTML = $icon;
-      document.body.classList.toggle('dark');
+      btn.addEventListener('click', () => {
+         const $icon = document.body.classList.contains('dark') ?
+            "<i class='bx bx-sun text-color'></i>" :
+            "<i class='bx bx-moon text-color'></i>";
+         btn.innerHTML = $icon;
+         document.body.classList.toggle('dark');
+      });
    });
-});
 </script>
 
 <body>
@@ -279,12 +279,12 @@ document.addEventListener('DOMContentLoaded', () => {
          <div class="col-md-12 my-3">
             <div class="d-flex justify-content-between align-items-center">
                <h3
-                   class="text-dark dark:text-white text-center p-1 d-flex justify-content-center align-items-center">
+                  class="text-dark dark:text-white text-center p-1 d-flex justify-content-center align-items-center">
                   <div class="alert <?= "alert-$color" ?> border-0 circle-medium my-0 mr-2 p-3">
                      <i class="bx bx-error-circle" style="font-size: medium;"></i>
                   </div>
                   <div class="text-color">Internal Server Error| <span class="text-gray"
-                           style="font-size: medium;"><?= $object ?>::class</span>
+                        style="font-size: medium;"><?= $object ?>::class</span>
                   </div>
                </h3>
                <div class="d-flex">
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="col-md-12">
                      <div class="px-5 pt-5 pb-2">
                         <span
-                              class="fw-500 alert <?= "alert-$color" ?> rounded-4 border-0 px-3 py-2"><?= $class ?></span>
+                           class="fw-500 alert <?= "alert-$color" ?> rounded-4 border-0 px-3 py-2"><?= $class ?></span>
                      </div>
                   </div>
                   <div class="col-md-9">
@@ -316,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
                            <?= PHP_VERSION ?> ( <?= PHP_OS ?> )</p>
                      </div>
                      <div class="px-5 pb-2 w-100 text-center text-gray"
-                          style="margin-top: -10px; font-size: smaller;">
-                        Cast Framework| v2.23</div>
+                        style="margin-top: -10px; font-size: smaller;">
+                        Anode Error Handler| <?= EDD_VERSION ?></div>
                   </div>
                </div>
             </div>
@@ -349,10 +349,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="table-responsive">
                            <table class="table">
                               <?php foreach ($args as $e => $v): ?>
-                              <tr>
-                                 <th><?= ucfirst($e) ?></th>
-                                 <td><?= $v ?></td>
-                              </tr>
+                                 <tr>
+                                    <th><?= ucfirst($e) ?></th>
+                                    <td><?= $v ?></td>
+                                 </tr>
                               <?php endforeach ?>
                            </table>
                         </div>
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
    </div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+   integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
 </script>
 
 </html>

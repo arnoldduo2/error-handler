@@ -41,3 +41,27 @@ if (!function_exists('eparseDir')) {
       return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
    }
 }
+if (!function_exists('egitVersion')) {
+   function egitVersion(): ?string
+   {
+      $tag = shell_exec('git describe --tags --abbrev=0');
+      if ($tag === null) {
+         return null; // No tags found
+      }
+      return trim($tag);
+   }
+}
+if (!function_exists('egitCommitHash')) {
+   /**
+    * Get the current Git commit hash.
+    * @return string|null The short commit hash or null if not found.
+    */
+   function egitCommitHash(): ?string
+   {
+      $hash = shell_exec('git rev-parse --short HEAD');
+      if ($hash === null) {
+         return null; // No hash found
+      }
+      return trim($hash);
+   }
+}

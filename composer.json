@@ -30,7 +30,8 @@
       "Anode\\ErrorHandler\\": "src/"
     },
     "files": [
-      "src/helpers/helpers.php"
+      "src/helpers/helpers.php",
+      "src/helpers/constants.php"
     ]
   },
   "require-dev": {
