@@ -119,7 +119,7 @@ $errorHandler = new ErrorHandler([
 
 trigger_error("This is a test error.", E_USER_WARNING);
 ```
-##Screenshots
+## Screenshots
 ![Screenshot 2025-03-24 222510](https://github.com/user-attachments/assets/1ea94a23-a6c7-470e-8649-cef130c21d87)
 ![production without debug enabled](https://github.com/user-attachments/assets/b4976209-cb01-4841-a0dc-1d9b121b66b0)
 ![production with debug enabled](https://github.com/user-attachments/assets/42a351f0-565b-4972-a4b0-0fbffc09dd4d)
