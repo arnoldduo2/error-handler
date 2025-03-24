@@ -74,24 +74,24 @@ A robust, customizable, and developer-friendly error handler for PHP application
 
 The `ErrorHandler` constructor accepts an array of options to customize its behavior. Here are the available options:
 
-| Option                         | Type     | Default                                | Description                                                                          |
-| ------------------------------ | -------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
-| `app_name`                     | `string` | `Anode Error Handler`                  | The name of the application.                                                         |
-| `app_enviroment`               | `string` | `development`                          | The application environment (e.g., 'development', 'production').                     |
-| `app_debug`                    | `bool`   | `true`                                 | Whether to display detailed error messages (true) or user-friendly messages (false). |
-| `base_url`                     | `string` | `/`                                    | The base URL of the application.                                                     |
-| `error_reporting_level`        | `int`    | `E_ALL`                                | The level of error reporting.                                                        |
-| `display_errors`               | `bool`   | `false`                                | Whether to display errors.                                                           |
-| `log_errors`                   | `bool`   | `true`                                 | Whether to log errors.                                                               |
-| `log_directory`                | `string` | `__DIR__ . '/../../storage/logs/'`     | The directory where error logs are saved.                                            |
-| `dev_logs`                     | `bool`   | `false`                                | Whether to enable developer-specific logging.                                        |
-| `dev_logs_directory`           | `string` | `__DIR__ . '/../../storage/logs/dev/'` | The directory for developer logs.                                                    |
-| `email_logging`                | `bool`   | `false`                                | Whether to enable email logging.                                                     |
-| `email_logging_address`        | `string` | `''`                                   | The email address to send error logs to.                                             |
-| `email_logging_subject`        | `string` | `Error Log`                            | The subject of the email for error logs.                                             |
-| `email_logging_mailer`         | `object` | `null`                                 | The mailer object to use for sending emails.                                         |
-| `email_logging_mailer_options` | `array`  | `[]`                                   | The options for the mailer.                                                          |
-| `error_view`                   | `string` | `__DIR__ . '/../../views/user.php'`    | The path to the error view file that matches your application.                       |
+| Option                         | Type     | Default                                | Description                                                                                               |
+| ------------------------------ | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `app_name`                     | `string` | `Anode Error Handler`                  | The name of the application.                                                                              |
+| `app_enviroment`               | `string` | `development`                          | The application environment (e.g., 'development', 'production').                                          |
+| `app_debug`                    | `bool`   | `true`                                 | Whether to display detailed error messages (true) or user-friendly messages (false).                      |
+| `base_url`                     | `string` | `/`                                    | The base URL of the application.                                                                          |
+| `error_reporting_level`        | `int`    | `E_ALL`                                | The level of error reporting.                                                                             |
+| `display_errors`               | `bool`   | `false`                                | Whether to display errors.                                                                                |
+| `log_errors`                   | `bool`   | `true`                                 | Whether to log errors.                                                                                    |
+| `log_directory`                | `string` | `__DIR__ . '/../../storage/logs/'`     | The directory where error logs are saved.                                                                 |
+| `dev_logs`                     | `bool`   | `false`                                | Whether to enable developer-specific logging.                                                             |
+| `dev_logs_directory`           | `string` | `__DIR__ . '/../../storage/logs/dev/'` | The directory for developer logs.                                                                         |
+| `email_logging`                | `bool`   | `false`                                | Whether to enable email logging.                                                                          |
+| `email_logging_address`        | `string` | `''`                                   | The email address to send error logs to.                                                                  |
+| `email_logging_subject`        | `string` | `Error Log`                            | The subject of the email for error logs.                                                                  |
+| `email_logging_mailer`         | `object` | `null`                                 | The mailer object to use for sending emails.                                                              |
+| `email_logging_mailer_options` | `array`  | `[]`                                   | The options for the mailer.                                                                               |
+| `error_view`                   | `string` | `null`                                 | The path to the error view file. that matches your application. If null the handler will use its default. |
 
 ## Examples
 

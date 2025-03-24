@@ -110,7 +110,7 @@ class ErrorHandler extends Exception
          'email_logging_subject' => $handler_options['email_logging_subject'] ?? 'Error Log',
          'email_logging_mailer' => $handler_options['email_logging_mailer'] ?? null,
          'email_logging_mailer_options' => $handler_options['email_logging_mailer_options'] ?? [],
-         'error_view' => $handler_options['error_view'] ?? __DIR__ . '/../..views/user.php',
+         'error_view' => $handler_options['error_view'] ?? null,
       ];
 
       // Set the error reporting level.

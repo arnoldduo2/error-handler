@@ -43,8 +43,8 @@ class ErrorLogger
    {
       //Check if development logs are enabled and set the log directory accordingly.
       $logDir = ($this->options['dev_logs']) ?
-         parseDir($this->options['dev_logs_directory']) :
-         parseDir($this->options['log_directory']);
+         eparseDir($this->options['dev_logs_directory']) :
+         eparseDir($this->options['log_directory']);
 
       // Check if the log directory exists. If not, create it.
       if (!is_dir($logDir)) {

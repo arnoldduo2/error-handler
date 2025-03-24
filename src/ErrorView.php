@@ -36,6 +36,7 @@ class ErrorView
 
    private string $baseUrl;
    private array $options = [];
+   private string $error_view = __DIR__ . '/views/handler.php';
    /**
     * Constructor for the ErrorView class.
     * Initializes the base URL based on the set options.
@@ -59,7 +60,7 @@ class ErrorView
          'env' => $options['env'] ?? 'development',
          'debug' => $options['debug'] ?? true,
          'baseUrl' => $options['baseUrl'] ?? '/',
-         'error_view' => $options['error_view'] ?? __DIR__ . '/../../views/user.php',
+         'error_view' => $options['error_view'] ?? __DIR__ . '/views/user.php',
       ];
 
       $this->baseUrl = $this->options['baseUrl'] ?? '/';
@@ -81,7 +82,7 @@ class ErrorView
       if ($requestMethod === 'GET') {
          http_response_code(500);
          if ($this->options['env'] === 'development')
-            echo $this->view('handler', $this->e_all($e));
+            echo $this->view($this->error_view, $this->e_all($e));
          if ($this->options['env'] === 'production')
             echo $this->view($this->options['error_view'], $this->e_none($e));
          exit;
@@ -106,7 +107,8 @@ class ErrorView
     */
    private function view(string $view, array $data): string
    {
-      $viewFile = parseDir(__DIR__ . "/views/$view.php");
+
+      $viewFile = eparseDir($view);
       if (file_exists($viewFile)) {
          extract($data);
          if (ob_get_status()) ob_clean();
@@ -121,29 +123,23 @@ class ErrorView
 
 
    /**
-    * Check if the given object is an exception.
+    * Check if the given object is an Exception, Error or Throwable.
     * @param mixed $e The object to check.
     * @return bool True if the object is an exception, false otherwise.
     */
    private function isException(mixed $e): bool
    {
-      return $e instanceof Throwable || $e instanceof Exception;
-   }
-
-   /**
-    * Check if the given object is an error.
-    * @param mixed $e The object to check.
-    * @return bool True if the object is an error, false otherwise.
-    */
-   private function isError(mixed $e): bool
-   {
       return
+         $e instanceof Throwable ||
+         $e instanceof Exception ||
          $e instanceof Error ||
          $e instanceof ParseError ||
          $e instanceof TypeError ||
          $e instanceof ArithmeticError ||
          $e instanceof AssertionError;
    }
+
+
 
    /**
     * Display a detailed error message for the development env. Will check if the error is an exception or an error.
@@ -152,11 +148,11 @@ class ErrorView
     */
    private function e_all(mixed $e): array|bool
    {
-      if (is_array($e)) return $e;
-      if (!$this->isException($e) || !$this->isError($e))
+      if (is_array($e)) return $this->shutdownError($e);
+      if (!$this->isException($e))
          return $this->e_unkown();
       $args = isset($e->getTrace()[0]['args'][0]) ? $e->getTrace()[0]['args'] : ($e->getTrace()[0]['args'] ?? null);
-      // dd($e);
+
       return (!$args) ? [
          'status_code' => 500,
          'object' => get_class($e) ?? 'Exception',
@@ -201,7 +197,8 @@ class ErrorView
     */
    private function e_none(mixed $e): array
    {
-      if (!$this->isException($e) || !$this->isError($e))
+      if (is_array($e)) return $this->shutdownError($e);
+      if (!$this->isException($e))
          return ['message' => 'Unknown Error'];
       return [
          'backtrace' => $this->backTrace($e),
@@ -214,6 +211,27 @@ class ErrorView
       ];
    }
 
+   private function shutdownError(mixed $e): array
+   {
+      return [
+         'status_code' => 500,
+         'object' => 'ErrorHandler',
+         'class' => 'ErrorHandler',
+         'function' => 'shutdownError',
+         'type' =>  '::',
+         'message' => $e['message'],
+         'APP_NAME' => $this->options['name'],
+         'ROOT_PATH' => $this->baseUrl,
+         'color' => $this->errorTypeColor($e['type']) ?? 'danger',
+         'backtrace' => 'No backtrace available',
+         'args' => [
+            'type' => $this->errorType($e['type']),
+            'message' => $e['message'],
+            'file' => $e['file'],
+            'line' => $e['line'],
+         ]
+      ];
+   }
    private function e_unkown(): array
    {
       return [
@@ -225,7 +243,7 @@ class ErrorView
          'message' => 'Unknown',
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
-         'color' => 'gray',
+         'color' => 'warning',
          'backtrace' => 'Unknown',
          'args' => [
             'type' => 'Unknown',
@@ -235,6 +253,8 @@ class ErrorView
          ]
       ];
    }
+
+
    /**
     * Check if the error type is fatal.
     * @param int $type The error type.
@@ -299,8 +319,14 @@ class ErrorView
     */
    private function backTrace($e): string
    {
-      return $this->view('components/trace', [
-         'backtrace' => $e->getTraceAsString(),
-      ]);
+      if (is_array($e)) {
+         $e = new Exception($e['message'], $e['code']);
+      }
+      return $this->view(
+         __DIR__ . '/views/components/trace.php',
+         [
+            'backtrace' => $e->getTraceAsString(),
+         ],
+      );
    }
 }
