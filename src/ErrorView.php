@@ -87,15 +87,15 @@ class ErrorView
             echo $this->view($this->options['error_view'], $this->e_none($e));
          exit;
       } else {
-         if (is_array($e)) {
-            $e = ($this->options['debug']) ?
-               "Error {$this->errorType($e['code'])}: {$e['message']} in file {$e['file']} on line {$e['line']}" :
-               $e['message'];
-         }
-         $msg = 'Exception Server Error: Something didn\'t go right. Try again later or contact support.';
+         if (is_array($e))
+            $e = "Error {$this->errorType($e['code'])}: {$e['message']} in file {$e['file']} on line {$e['line']}";
+
+         $msg = '';
          if ($this->options['env'] === 'development')
             $msg = "Exception Server Error: $e";
-         echo  json_encode(['type' => 'error', 'msg' => $msg]);
+         if ($this->options['env'] === 'production')
+            $msg = "Exception Server Error: Something didn\'t go right. Try again later or contact support.";
+         echo  json_encode(['type' => 'error', 'msg' => $msg]), exit;
       }
    }
 
@@ -213,13 +213,14 @@ class ErrorView
 
    private function shutdownError(mixed $e): array
    {
-      return [
+      return  [
          'status_code' => 500,
          'object' => 'ErrorHandler',
          'class' => 'ErrorHandler',
          'function' => 'shutdownError',
          'type' =>  '::',
-         'message' => $e['message'],
+         'message' => $this->options['debug'] ? $e['message'] :
+            'An error occurred on the server. Please Contact your Administrator or try again later.',
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
          'color' => $this->errorTypeColor($e['type']) ?? 'danger',
