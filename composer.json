@@ -23,8 +23,7 @@
     }
   ],
   "require": {
-    "php": "^8.0",
-    "arnoldduo2/error-handler": "dev-master"
+    "php": "^8.0"
   },
   "autoload": {
     "psr-4": {
