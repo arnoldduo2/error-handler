@@ -22,6 +22,7 @@
       "url": "https://github.com/arnoldduo2/error-handler.git"
     }
   ],
+  "minimum-stability": "stable",
   "require": {
     "php": "^8.0",
     "arnoldduo2/error-handler": "dev-main"
