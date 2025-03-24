@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Anode\ErrorHandler;
 
+use Error;
 use ErrorException;
 use Exception;
 
@@ -150,16 +151,16 @@ class ErrorHandler extends Exception
     * @param Exception $exception The exception to handle.
     * @return void
     */
-   public function handleException(Exception $exception): void
+   public function handleException(Exception|Error $e): void
    {
       // Log the exception message.
-      $msg = $exception->getMessage();
-      $msg .= " in {$exception->getFile()} on line {$exception->getLine()}";
-      $msg .= "\n{$exception->getTraceAsString()}";
-      $this->logError($msg, (int)$exception->getLine());
+      $msg = $e->getMessage();
+      $msg .= " in {$e->getFile()} on line {$e->getLine()}";
+      $msg .= "\n{$e->getTraceAsString()}";
+      $this->logError($msg, (int)$e->getLine());
 
-      // Display a user-friendly error message.
-      $this->displayError($exception);
+      // Display the error message.
+      $this->displayError($e);
    }
 
    /**
@@ -194,10 +195,10 @@ class ErrorHandler extends Exception
     * 
     * Log an error message to the error log file.
     * @param string $errorMessage The error message to log.
-    * @param int $line The line number where the error occurred.
+    * @param int|string $line The line number where the error occurred.
     * @return void
     */
-   private function logError(string $errorMessage, $line): void
+   private function logError(string $errorMessage, int|string $line): void
    {
       (new ErrorLogger(
          [
@@ -216,10 +217,10 @@ class ErrorHandler extends Exception
 
    /**
     * Display an error message to the user. Intializes the ErrorView class which is responsible for rendering the error page or generating a JSON response.
-    * @param array|Exception $e The error or exception to display.
+    * @param array|Exception|Error $e The error or exception to display.
     * @return void
     */
-   private function displayError(array|Exception $e): void
+   private function displayError(array|Exception|Error $e): void
    {
       $errorView = new ErrorView(
          [

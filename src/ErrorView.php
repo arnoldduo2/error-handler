@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Anode\ErrorHandler;
 
+use ArithmeticError;
+use AssertionError;
+use Error;
 use Exception;
+use ParseError;
 use Throwable;
+use TypeError;
 
 /**
  * The ErrorView class is responsible for rendering error views and displaying error messages.
@@ -126,13 +131,31 @@ class ErrorView
    }
 
    /**
-    * Display a detailed error message.
-    * @param Exception $e The exception to handle.
-    * @return array|bool An array of error details or false if not an exception.
+    * Check if the given object is an error.
+    * @param mixed $e The object to check.
+    * @return bool True if the object is an error, false otherwise.
     */
-   private function e_all(Exception $e): array|bool
+   private function isError(mixed $e): bool
    {
-      if (!$this->isException($e)) return false;
+      return
+         $e instanceof Error ||
+         $e instanceof ParseError ||
+         $e instanceof TypeError ||
+         $e instanceof ArithmeticError ||
+         $e instanceof AssertionError;
+   }
+
+   /**
+    * Display a detailed error message for the development env. Will check if the error is an exception or an error.
+    * @param mixed $e The error or exception to handle.
+    * @return array An array of error details or false if not an exception.
+    */
+   private function e_all(mixed $e): array|bool
+   {
+
+      if (is_array($e)) return $e;
+      if (!$this->isException($e) || !$this->isError($e))
+         return $this->e_unkown();
       $args = isset($e->getTrace()[0]['args'][0]) ? $e->getTrace()[0]['args'] : ($e->getTrace()[0]['args'] ?? null);
 
       return (!$args) ? [
@@ -173,13 +196,14 @@ class ErrorView
    }
 
    /**
-    * Display a user-friendly error message.
-    * @param Exception $e The exception to handle.
-    * @return array|bool An array of user-friendly error message to display or false if not an exception.
+    * Display a user-friendly error message. Will check if the error is an exception or an error.
+    * @param mixed $e The error or exception to handle.
+    * @return array An array of user-friendly error message to display or false if not an exception.
     */
-   private function e_none(Exception $e): array|bool
+   private function e_none(mixed $e): array
    {
-      if (!$this->isException($e)) return false;
+      if (!$this->isException($e) || !$this->isError($e))
+         return ['message' => 'Unknown Error'];
       return [
          'backtrace' => $this->backTrace($e),
          'status_code' => 500,
@@ -191,6 +215,27 @@ class ErrorView
       ];
    }
 
+   private function e_unkown(): array
+   {
+      return [
+         'status_code' => 500,
+         'object' => 'Unknown',
+         'class' => 'Unknown',
+         'function' => 'Unknown',
+         'type' => 'Unknown',
+         'message' => 'Unknown',
+         'APP_NAME' => $this->options['name'],
+         'ROOT_PATH' => $this->baseUrl,
+         'color' => 'gray',
+         'backtrace' => 'Unknown',
+         'args' => [
+            'type' => 'Unknown',
+            'message' => 'Unknown',
+            'file' => 'Unknown',
+            'line' => 'Unknown',
+         ]
+      ];
+   }
    /**
     * Check if the error type is fatal.
     * @param int $type The error type.
