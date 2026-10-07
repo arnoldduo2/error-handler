@@ -13,7 +13,7 @@ class ErrorLogger
       // Initialize the logger with default options
       $this->options = [
          'log_errors' => $options['log_errors'] ?? true,
-         'logs_directory' => $options['logs_directory'] ?? __DIR__ . '/../storage/logs/',
+         'logs_directory' => $options['logs_directory'] ?? $options['log_directory'] ?? __DIR__ . '/../storage/logs/',
          'dev_logs' => $options['dev_logs'] ?? false,
          'dev_logs_directory' => $options['dev_logs_directory'] ?? __DIR__ . '/../storage/logs/dev/',
          'email_logging' => $options['email_logging'] ?? false,

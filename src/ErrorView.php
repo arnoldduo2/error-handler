@@ -63,8 +63,6 @@ class ErrorView
          'error_view' => $options['error_view'] ?? __DIR__ . '/../views/user.php',
       ];
 
-      $this->error_view = $this->options['error_view'];
-
       $this->baseUrl = $this->options['baseUrl'] ?? '/';
       if (str_contains($this->baseUrl, 'http')) {
          $this->baseUrl = str_replace('http://', '', $this->baseUrl);
@@ -172,7 +170,7 @@ class ErrorView
          'status_code' => 500,
          'object' => get_class($e) ?? 'Exception',
          'class' => $e->getTrace()[0]['class'] ?? 'ExceptionErrorHandler',
-         'function' => $e->getTrace()[0]['function'],
+         'function' => $e->getTrace()[0]['function'] ?? 'main',
          'type' => $e->getTrace()[0]['type'] ?? '->',
          'message' => $e->getMessage(),
          'APP_NAME' => $this->options['name'],

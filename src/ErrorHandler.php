@@ -102,7 +102,7 @@ class ErrorHandler extends Exception
          'error_reporting_level' => $handler_options['error_reporting_level'] ?? E_ALL,
          'display_errors' => $handler_options['display_errors'] ?? false,
          'log_errors' => $handler_options['log_errors'] ?? true,
-         'logs_directory' => $handler_options['logs_directory'] ?? __DIR__ . '/../storage/logs/',
+         'logs_directory' => $handler_options['logs_directory'] ?? $handler_options['log_directory'] ?? __DIR__ . '/../storage/logs/',
          'dev_logs' => $handler_options['dev_logs'] ?? false,
          'dev_logs_directory' => $handler_options['dev_logs_directory'] ?? __DIR__ . '/../storage/logs/dev/',
          'email_logging' => $handler_options['email_logging'] ?? false,
@@ -230,7 +230,7 @@ class ErrorHandler extends Exception
             'name' => $this->options['app_name'],
             'env' => $this->options['app_enviroment'],
             'debug' => $this->options['app_debug'],
-            'view' => $this->options['error_view'],
+            'error_view' => $this->options['error_view'],
             'baseUrl' => $this->options['base_url'],
          ]
       );
