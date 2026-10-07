@@ -234,7 +234,7 @@ class ErrorHandler extends Exception
             'baseUrl' => $this->options['base_url'],
          ]
       );
-      if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
          // Handle AJAX requests.
          header('Content-Type: application/json');
          if (is_array($e))

@@ -1,5 +1,4 @@
 <?php
-// filepath: tests/ErrorViewTest.php
 
 declare(strict_types=1);
 
@@ -9,88 +8,82 @@ use Anode\ErrorHandler\ErrorView;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Unit tests for ErrorView internals. display() calls exit, so the rendered
+ * responses are covered end to end in ErrorPageTest instead.
+ */
 class ErrorViewTest extends TestCase
 {
-   private string $dummyViewDir;
-
-   protected function setUp(): void
+   private function property(ErrorView $view, string $name): mixed
    {
-      parent::setUp();
-      // Create a dummy view directory structure under src/views
-      // so that the GET branch in display() finds the view file.
-      $this->dummyViewDir = __DIR__ . '/../../src/views/';
-      if (!is_dir($this->dummyViewDir)) {
-         mkdir($this->dummyViewDir, 0777, true);
-      }
-      // Create a dummy "handler.php" for development mode errors.
-      file_put_contents("{$this->dummyViewDir}handler.php", 'Dummy Handler View');
-      // Create a dummy component view for backTrace() if needed.
-      $compDir = "{$this->dummyViewDir}components/";
-      if (!is_dir($compDir)) {
-         mkdir($compDir, 0777, true);
-      }
-      file_put_contents("{$compDir}trace.php", 'Trace: <?= $backtrace ?>');
+      $prop = (new \ReflectionClass($view))->getProperty($name);
+      $prop->setAccessible(true);
+      return $prop->getValue($view);
    }
 
-   protected function tearDown(): void
+   private function call(ErrorView $view, string $method, mixed ...$args): mixed
    {
-      // Remove dummy view files.
-      @unlink("{$this->dummyViewDir}handler.php");
-      @unlink("{$this->dummyViewDir}components/trace.php");
-      // Optionally remove directories if desired.
-      parent::tearDown();
+      $ref = (new \ReflectionClass($view))->getMethod($method);
+      $ref->setAccessible(true);
+      return $ref->invoke($view, ...$args);
    }
 
    public function testConstructorDefaultOptions(): void
    {
-      $errorView = new ErrorView();
-      // Use reflection to access non-public options property.
-      $ref = new \ReflectionClass($errorView);
-      $prop = $ref->getProperty('options');
-      $prop->setAccessible(true);
-      $options = $prop->getValue($errorView);
+      $view = new ErrorView();
+      $options = $this->property($view, 'options');
+      $package = dirname(__DIR__, 2);
 
-      $this->assertEquals('development', $options['env']);
+      $this->assertSame('Anode Error Handler', $options['name']);
+      $this->assertSame('development', $options['env']);
       $this->assertTrue($options['debug']);
-      $this->assertEquals('/', $options['baseUrl']);
-      // Default error_view set by the constructor.
-      $this->assertEquals(__DIR__ . '/../../src/views/user.php', $options['error_view']);
+      $this->assertSame('/', $options['baseUrl']);
+      $this->assertSame(eparseDir("$package/views/user.php"), eparseDir($options['error_view']));
    }
 
-   /**
-    * Test display() in GET mode under development.
-    * @runInSeparateProcess
-    */
-   public function testDisplayGETDevelopment(): void
+   public function testCustomErrorViewDoesNotReplaceDevelopmentView(): void
    {
-      $options = ['env' => 'development', 'debug' => true];
-      $errorView = new ErrorView($options);
+      $view = new ErrorView(['error_view' => '/tmp/custom.php']);
+      $package = dirname(__DIR__, 2);
 
-      $exception = new Exception("Test exception message");
-      ob_start();
-      // Calling display() with GET will call exit, but with runInSeparateProcess
-      // the test isolation prevents the entire suite from exiting.
-      $errorView->display($exception, 'GET');
-      $output = ob_get_clean();
-
-      $this->assertStringContainsString('Dummy Handler View', $output);
+      $this->assertSame('/tmp/custom.php', $this->property($view, 'options')['error_view']);
+      $this->assertSame(eparseDir("$package/views/handler.php"), eparseDir($this->property($view, 'error_view')));
    }
 
-   public function testDisplayPOSTDevelopment(): void
+   public function testDevelopmentDetailsForTopLevelException(): void
    {
-      $options = ['env' => 'development', 'debug' => true];
-      $errorView = new ErrorView($options);
+      $view = new ErrorView();
+      // An exception created outside any function has an empty trace.
+      $details = $this->call($view, 'e_all', new Exception('Top level', 0));
 
-      $exception = new Exception("Test exception message", 500);
-      ob_start();
-      // In POST mode the output is a JSON encoded error message.
-      $errorView->display($exception, 'POST');
-      $output = ob_get_clean();
+      $this->assertSame(500, $details['status_code']);
+      $this->assertSame('Top level', $details['message']);
+      $this->assertSame('Exception', $details['object']);
+      $this->assertStringContainsString('Debug Trace', $details['backtrace']);
+   }
 
-      $data = json_decode($output, true);
-      $this->assertIsArray($data);
-      $this->assertEquals('error', $data['type']);
-      $this->assertStringContainsString('Exception Server Error:', $data['msg']);
-      $this->assertStringContainsString('Test exception message', $data['msg']);
+   public function testProductionDetailsHideMessageWhenDebugIsOff(): void
+   {
+      $view = new ErrorView(['env' => 'production', 'debug' => false]);
+      $details = $this->call($view, 'e_none', new Exception('Secret detail'));
+
+      $this->assertStringNotContainsString('Secret detail', $details['message']);
+   }
+
+   public function testShutdownDetailsTolerateMissingKeys(): void
+   {
+      $view = new ErrorView();
+      $details = $this->call($view, 'e_all', ['message' => 'Partial error']);
+
+      $this->assertSame('Partial error', $details['args']['message']);
+      $this->assertSame('Unknown file', $details['args']['file']);
+      $this->assertSame(0, $details['args']['line']);
+   }
+
+   public function testViewReturnsFallbackForMissingFile(): void
+   {
+      $view = new ErrorView();
+
+      $this->assertSame('No error view file found', $this->call($view, 'view', '/no/such/view.php', []));
    }
 }

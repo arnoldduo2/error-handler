@@ -111,7 +111,7 @@ if (!function_exists('egitVersion')) {
    function egitVersion(): ?string
    {
       $tag = shell_exec('git describe --tags --abbrev=0 2>&1'); // Get the latest tag
-      if (strpos($tag, 'fatal') !== false || $tag === null) {
+      if ($tag === null || $tag === false || strpos($tag, 'fatal') !== false) {
          return null; // No tags found or Git error
       }
       return trim($tag);
@@ -124,8 +124,8 @@ if (!function_exists('egitCommitHash')) {
     */
    function egitCommitHash(): ?string
    {
-      $hash = shell_exec('git rev-parse --short HEAD');
-      if ($hash === null) {
+      $hash = shell_exec('git rev-parse --short HEAD 2>&1');
+      if ($hash === null || $hash === false || strpos($hash, 'fatal') !== false) {
          return null; // No hash found
       }
       return trim($hash);
