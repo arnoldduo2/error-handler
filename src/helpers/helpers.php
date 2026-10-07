@@ -38,7 +38,55 @@ if (!function_exists('eparseDir')) {
     */
    function eparseDir(string $dir): string
    {
-      return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
+      $trailing = str_ends_with($dir, '/') || str_ends_with($dir, '\\');
+      $dir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
+
+      $prefix = '';
+      if (preg_match('/^[A-Za-z]:/', $dir) === 1) {
+         $prefix = substr($dir, 0, 2);
+         $dir = substr($dir, 2);
+      }
+
+      $parts = [];
+      foreach (explode(DIRECTORY_SEPARATOR, $dir) as $part) {
+         if ($part === '' || $part === '.') {
+            continue;
+         }
+
+         if ($part === '..') {
+            if (!empty($parts)) {
+               array_pop($parts);
+            }
+            continue;
+         }
+
+         $parts[] = $part;
+      }
+
+      $normalized = implode(DIRECTORY_SEPARATOR, $parts);
+      if ($dir !== '' && str_starts_with($dir, DIRECTORY_SEPARATOR)) {
+         $normalized = DIRECTORY_SEPARATOR . $normalized;
+      }
+
+      if ($prefix !== '') {
+         $normalized = $prefix . $normalized;
+      }
+
+      if ($trailing && !str_ends_with($normalized, DIRECTORY_SEPARATOR)) {
+         $normalized .= DIRECTORY_SEPARATOR;
+      }
+
+      return $normalized;
+   }
+}
+
+if (!function_exists('parseDir')) {
+   /**
+    * Backward-compatible alias used by the package tests and caller code.
+    */
+   function parseDir(string $dir): string
+   {
+      return eparseDir($dir);
    }
 }
 if (!function_exists('egetVersion')) {

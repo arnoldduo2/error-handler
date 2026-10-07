@@ -34,7 +34,7 @@ class ErrorHandler extends Exception
     *   error_reporting_level: int,
     *   display_errors: bool,
     *   log_errors: bool,
-    *   log_directory: string,
+    *   logs_directory: string,
     *   dev_logs: bool,
     *   dev_logs_directory: string,
     *   email_logging: bool,
@@ -57,7 +57,7 @@ class ErrorHandler extends Exception
     *   error_reporting_level: int,
     *   display_errors: bool,
     *   log_errors: bool,
-    *   log_directory: string,
+    *   logs_directory: string,
     *   dev_logs: bool,
     *   dev_logs_directory: string,
     *   email_logging: bool,
@@ -78,7 +78,7 @@ class ErrorHandler extends Exception
     * - error_reporting_level: int - The level of error reporting. Default is E_ALL.
     * - display_errors: bool - Whether to display errors. Default is false.
     * - log_errors: bool - Whether to log errors. Default is true.
-    * - log_directory: string - The directory where error logs are saved. Default is __DIR__ . '/../../storage/logs/'.
+    * - logs_directory: string - The directory where error logs are saved. Default is __DIR__ . '/../../storage/logs/'.
     * - dev_logs: bool - Whether to enable developer-specific logging. Default is false.
     * - dev_logs_directory: string - The directory for developer logs. Default is __DIR__ . '/../../storage/logs/dev/'.
     * - email_logging: bool - Whether to enable email logging. Default is false.
@@ -102,15 +102,15 @@ class ErrorHandler extends Exception
          'error_reporting_level' => $handler_options['error_reporting_level'] ?? E_ALL,
          'display_errors' => $handler_options['display_errors'] ?? false,
          'log_errors' => $handler_options['log_errors'] ?? true,
-         'log_directory' => $handler_options['log_directory'] ?? __DIR__ . '/../../storage/logs/',
+         'logs_directory' => $handler_options['logs_directory'] ?? __DIR__ . '/../storage/logs/',
          'dev_logs' => $handler_options['dev_logs'] ?? false,
-         'dev_logs_directory' => $handler_options['dev_logs_directory'] ?? __DIR__ . '/../../storage/logs/dev/',
+         'dev_logs_directory' => $handler_options['dev_logs_directory'] ?? __DIR__ . '/../storage/logs/dev/',
          'email_logging' => $handler_options['email_logging'] ?? false,
          'email_logging_address' => $handler_options['email_logging_address'] ?? '',
          'email_logging_subject' => $handler_options['email_logging_subject'] ?? 'Error Log',
          'email_logging_mailer' => $handler_options['email_logging_mailer'] ?? null,
          'email_logging_mailer_options' => $handler_options['email_logging_mailer_options'] ?? [],
-         'error_view' => $handler_options['error_view'] ?? null,
+         'error_view' => $handler_options['error_view'] ?? __DIR__ . '/../views/user.php',
       ];
 
       // Set the error reporting level.
@@ -148,7 +148,7 @@ class ErrorHandler extends Exception
 
    /**
     * Handle uncaught exceptions.
-    * @param Exception $exception The exception to handle.
+    * @param Exception $e The exception to handle.
     * @return void
     */
    public function handleException(Exception|Error $e): void
@@ -172,6 +172,9 @@ class ErrorHandler extends Exception
       $error = error_get_last();
       if ($error !== null && $this->isFatal($error['type'])) {
          // Fatal error detected.
+         // Clean ALL output buffers before responding — critical for shutdown errors
+         // where PHP may have already partially flushed earlier output.
+         while (ob_get_level()) ob_end_clean();
          $message = $error['message'] . " in {$error['file']} on line {$error['line']}";
          $this->logError($message, (int)$error['line']);
          $this->displayError($error);
@@ -203,7 +206,7 @@ class ErrorHandler extends Exception
       (new ErrorLogger(
          [
             'log_errors' => $this->options['log_errors'],
-            'log_directory' => $this->options['log_directory'],
+            'logs_directory' => $this->options['logs_directory'],
             'dev_logs' => $this->options['dev_logs'],
             'dev_logs_directory' => $this->options['dev_logs_directory'],
             'email_logging' => $this->options['email_logging'],

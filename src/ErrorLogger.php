@@ -13,9 +13,9 @@ class ErrorLogger
       // Initialize the logger with default options
       $this->options = [
          'log_errors' => $options['log_errors'] ?? true,
-         'log_directory' => $options['log_directory'] ?? __DIR__ . '/../../storage/logs/',
+         'logs_directory' => $options['logs_directory'] ?? __DIR__ . '/../storage/logs/',
          'dev_logs' => $options['dev_logs'] ?? false,
-         'dev_logs_directory' => $options['dev_logs_directory'] ?? __DIR__ . '/../../storage/logs/dev/',
+         'dev_logs_directory' => $options['dev_logs_directory'] ?? __DIR__ . '/../storage/logs/dev/',
          'email_logging' => $options['email_logging'] ?? false,
          'email_logging_address' => $options['email_logging_address'] ?? '',
          'email_logging_subject' => $options['email_logging_subject'] ?? 'Error Log',
@@ -44,17 +44,17 @@ class ErrorLogger
       //Check if development logs are enabled and set the log directory accordingly.
       $logDir = ($this->options['dev_logs']) ?
          eparseDir($this->options['dev_logs_directory']) :
-         eparseDir($this->options['log_directory']);
+         eparseDir($this->options['logs_directory']);
 
       // Check if the log directory exists. If not, create it.
       if (!is_dir($logDir)) {
          mkdir($logDir, 0777, true);
       }
       // ... inside the logError method
-      $fileName = "Line-$line-" . uniqid() . "." . date('d-M-Y-H.i.s') . '.log';
+      $fileName = "Log." . date('d-M-Y-H.i.s') . "@Line-$line-" . uniqid() . ".log";
       // ...
 
-      $fileName = "{$logDir}$fileName";
+      $fileName = rtrim($logDir, '/\\') . DIRECTORY_SEPARATOR . $fileName;
       $logFile = fopen($fileName, "wb");
       if ($logFile === false)
          throw new \RuntimeException("Failed to open log file: $fileName");

@@ -36,7 +36,7 @@ class ErrorView
 
    private string $baseUrl;
    private array $options = [];
-   private string $error_view = __DIR__ . '/views/handler.php';
+   private string $error_view = __DIR__ . '/../views/handler.php';
    /**
     * Constructor for the ErrorView class.
     * Initializes the base URL based on the set options.
@@ -60,8 +60,10 @@ class ErrorView
          'env' => $options['env'] ?? 'development',
          'debug' => $options['debug'] ?? true,
          'baseUrl' => $options['baseUrl'] ?? '/',
-         'error_view' => $options['error_view'] ?? __DIR__ . '/views/user.php',
+         'error_view' => $options['error_view'] ?? __DIR__ . '/../views/user.php',
       ];
+
+      $this->error_view = $this->options['error_view'];
 
       $this->baseUrl = $this->options['baseUrl'] ?? '/';
       if (str_contains($this->baseUrl, 'http')) {
@@ -86,17 +88,28 @@ class ErrorView
          if ($this->options['env'] === 'production')
             echo $this->view($this->options['error_view'], $this->e_none($e));
          exit;
-      } else {
-         if (is_array($e))
-            $e = "Error {$this->errorType($e['code'])}: {$e['message']} in file {$e['file']} on line {$e['line']}";
-
-         $msg = '';
-         if ($this->options['env'] === 'development')
-            $msg = "Exception Server Error: $e";
-         if ($this->options['env'] === 'production')
-            $msg = "Exception Server Error: Something didn\'t go right. Try again later or contact support.";
-         echo  json_encode(['type' => 'error', 'msg' => $msg]), exit;
       }
+
+      // POST / AJAX — never render an HTML page; return clean JSON only.
+      // Drain any remaining buffers so no stray HTML leaks before our response.
+      while (ob_get_level()) ob_end_clean();
+      http_response_code(500);
+
+      if ($this->options['env'] === 'production') {
+         $msg = "An error occurred on the server. Please contact your administrator or try again later.";
+      } else {
+         // Development: surface the real error message.
+         if (is_array($e)) {
+            $msg = $e['message'] ?? 'Unknown server error';
+         } elseif ($e instanceof \Throwable) {
+            $msg = $e->getMessage();
+         } else {
+            $msg = 'Unknown server error';
+         }
+      }
+
+      echo json_encode(['type' => 'error', 'msg' => $msg]);
+      exit;
    }
 
    /**
@@ -111,10 +124,12 @@ class ErrorView
       $viewFile = eparseDir($view);
       if (file_exists($viewFile)) {
          extract($data);
-         if (ob_get_status()) ob_clean();
-         else ob_start();
-         // Start output buffering
-         // Include the view file
+         // Always end any existing buffers and start a fresh one so the view
+         // is captured as a string rather than leaking directly to output.
+         // This is critical for shutdown errors, which fire after the normal
+         // output buffer may have already been flushed/discarded.
+         while (ob_get_status()) ob_end_clean();
+         ob_start();
          include $viewFile;
          $view = ob_get_clean();
          return $view;
@@ -223,13 +238,13 @@ class ErrorView
             'An error occurred on the server. Please Contact your Administrator or try again later.',
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
-         'color' => $this->errorTypeColor($e['type']) ?? 'danger',
+         'color' => $this->errorTypeColor($e['type'] ?? $e['code'] ?? 0) ?? 'danger',
          'backtrace' => 'No backtrace available',
          'args' => [
-            'type' => $this->errorType($e['type']),
-            'message' => $e['message'],
-            'file' => $e['file'],
-            'line' => $e['line'],
+            'type' => $this->errorType($e['type'] ?? $e['code'] ?? 0),
+            'message' => $e['message'] ?? 'Unknown error',
+            'file' => $e['file'] ?? 'Unknown file',
+            'line' => $e['line'] ?? 0,
          ]
       ];
    }
@@ -261,8 +276,9 @@ class ErrorView
     * @param int $type The error type.
     * @return bool True if the error type is fatal, false otherwise.
     */
-   private function errorType(int $type): string
+   private function errorType(int|string $type): string
    {
+      if (is_string($type))   return $type;
       return match ($type) {
          E_ERROR => 'ERROR',
          E_WARNING => 'WARNING',
