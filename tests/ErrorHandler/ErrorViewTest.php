@@ -25,7 +25,11 @@ class ErrorViewTest extends TestCase
    {
       $ref = (new \ReflectionClass($view))->getMethod($method);
       $ref->setAccessible(true);
-      return $ref->invoke($view, ...$args);
+      // view() deliberately drains every output buffer; reopen PHPUnit's afterwards.
+      $level = ob_get_level();
+      $result = $ref->invoke($view, ...$args);
+      while (ob_get_level() < $level) ob_start();
+      return $result;
    }
 
    public function testConstructorDefaultOptions(): void
