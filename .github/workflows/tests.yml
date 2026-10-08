@@ -36,4 +36,18 @@ jobs:
         run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run tests
-        run: composer test
+        run: composer test -- --log-junit junit.xml
+
+      # Surface failing tests as annotations on the run and on pull requests.
+      - name: Annotate failures
+        if: failure()
+        shell: php {0}
+        run: |
+          <?php
+          $xml = @simplexml_load_file('junit.xml');
+          if (!$xml) exit;
+          foreach ($xml->xpath('//testcase[failure or error]') as $case) {
+             $node = $case->failure ?: $case->error;
+             $msg = str_replace(['%', "\r", "\n"], ['%25', '%0D', '%0A'], substr((string) $node, 0, 3000));
+             echo "::error title={$case['class']}::{$case['name']}%0A{$msg}\n";
+          }

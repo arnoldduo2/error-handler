@@ -37,3 +37,6 @@ xdebug.log
 # Other
 npm-debug.log
 yarn-error.log
+
+# PHPUnit reports
+junit.xml
