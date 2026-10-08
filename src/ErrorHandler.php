@@ -115,8 +115,9 @@ class ErrorHandler extends Exception
 
       // Set the error reporting level.
       // This will set the error reporting level to the value specified in the options array.
-      ini_set('display_errors', $this->options['display_errors']);
-      ini_set('error_reporting', $this->options['error_reporting_level']);
+      // ini_set() only accepts strings on PHP 8.0 under strict_types.
+      ini_set('display_errors', $this->options['display_errors'] ? '1' : '0');
+      ini_set('error_reporting', (string) $this->options['error_reporting_level']);
 
       // Handle PHP errors as exceptions.
       set_error_handler([$this, 'handleError']);
