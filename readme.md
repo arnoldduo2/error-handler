@@ -103,6 +103,8 @@ The `ErrorHandler` constructor accepts an array of options to customize its beha
 
 ## The error page (development)
 
+![The development error page: the failing code with the part underlined in red, an Open in editor link, and the stack](docs/error-page.png)
+
 With `app_enviroment` set to `development` an uncaught exception, a PHP warning or a fatal error shows:
 
 - the message, its class, the file and line, with **Open in editor** (the same idea as clicking the source link in a browser console: it opens the real file at the real line) and **Copy path**;
