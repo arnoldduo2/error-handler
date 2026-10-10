@@ -61,15 +61,44 @@ class ErrorPageTest extends TestCase
       $output = $this->runApp(['EH_ENV' => 'development', 'EH_METHOD' => 'GET', 'EH_KIND' => 'fatal']);
 
       $this->assertStringContainsString('Allowed memory size', $output);
-      $this->assertStringNotContainsString('Fixture boom', $output);
+      $this->assertStringNotContainsString('<h1>Fixture boom', $output);     // (the code shown around line 32 does contain the text)
       $this->assertNotEmpty(TestFiles::logs($this->logDir));
+   }
+
+   public function testDevelopmentPageShowsTheCodeUnderlinedAndALinkToTheFile(): void
+   {
+      $output = $this->runApp(['EH_ENV' => 'development', 'EH_METHOD' => 'GET']);
+
+      $this->assertStringContainsString('class="cl cl-error"', $output, 'the failing line is marked');
+      $this->assertStringContainsString('<span class="ts tu">&#039;Fixture boom&#039;</span>', $output, 'the code around it, coloured, with the statement underlined');
+      $this->assertMatchesRegularExpression('/class="[^"]*\btu\b[^"]*"/', $output, 'and the failing part underlined');
+      $this->assertMatchesRegularExpression('#href="vscode://file/[^"]*tests/fixtures/app\.php:\d+:1"#', $output, 'a link opens it in the editor');
+      $this->assertStringContainsString('tests/fixtures/app.php:35', $output);
+      $this->assertStringNotContainsString('cdn.', $output, 'no stylesheet or script from the internet');
+      $this->assertStringNotContainsString('https://', str_replace('https://www.w3.org', '', $output));
+   }
+
+   public function testTheLogEntryHoldsTheCodeAndTheStack(): void
+   {
+      $this->runApp(['EH_ENV' => 'development', 'EH_METHOD' => 'GET']);
+      $files = TestFiles::logs($this->logDir);
+      $this->assertCount(1, $files);
+      $log = (string) file_get_contents($files[0]);
+      $this->assertStringContainsString('RuntimeException', $log);
+      $this->assertStringContainsString('Message   Fixture boom', $log);
+      $this->assertStringContainsString("throw new RuntimeException('Fixture boom');", $log);
+      $this->assertStringContainsString('Stack', $log);
    }
 
    public function testDevelopmentPostReturnsJsonWithMessage(): void
    {
       $output = $this->runApp(['EH_ENV' => 'development', 'EH_METHOD' => 'POST']);
 
-      $this->assertSame(['type' => 'error', 'msg' => 'Fixture boom'], json_decode($output, true));
+      $data = json_decode($output, true);
+      $this->assertSame('error', $data['type']);
+      $this->assertSame('Fixture boom', $data['msg']);
+      $this->assertSame('RuntimeException', $data['debug']['kind'], 'development adds where it happened');
+      $this->assertSame('tests/fixtures/app.php', $data['debug']['file']);
    }
 
    public function testProductionPostHidesMessage(): void

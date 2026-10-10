@@ -61,6 +61,8 @@ class ErrorView
          'debug' => $options['debug'] ?? true,
          'baseUrl' => $options['baseUrl'] ?? '/',
          'error_view' => $options['error_view'] ?? __DIR__ . '/../views/user.php',
+         'snippet_lines' => $options['snippet_lines'] ?? 6,
+         'report' => $options['report'] ?? null,
       ];
 
       $this->baseUrl = $this->options['baseUrl'] ?? '/';
@@ -106,7 +108,13 @@ class ErrorView
          }
       }
 
-      echo json_encode(['type' => 'error', 'msg' => $msg]);
+      $answer = ['type' => 'error', 'msg' => $msg];
+      if ($this->options['env'] !== 'production' && is_array($this->options['report'])) {
+         // development only: where it happened, so a client can show it
+         $r = $this->options['report'];
+         $answer['debug'] = ['kind' => $r['kind'], 'file' => $r['relative'], 'line' => $r['line'], 'editor' => $r['editor'], 'trace' => array_map(static fn($f) => $f['relative'] . ':' . $f['line'] . ' ' . $f['context'], array_slice($r['frames'], 0, 12))];
+      }
+      echo json_encode($answer, JSON_UNESCAPED_SLASHES);
       exit;
    }
 
@@ -175,6 +183,8 @@ class ErrorView
          'message' => $e->getMessage(),
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
+         'report' => $this->options['report'],
+         'snippet_lines' => $this->options['snippet_lines'],
          'color' => $this->errorTypeColor($e->getCode()),
          'backtrace' => $this->backTrace($e),
          'args' => [
@@ -192,6 +202,8 @@ class ErrorView
          'message' => $e->getMessage(),
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
+         'report' => $this->options['report'],
+         'snippet_lines' => $this->options['snippet_lines'],
          'color' => $this->errorTypeColor((int)$e->getTrace()[0]['args'][0] ?? $e->getCode()),
          'backtrace' => $this->backTrace($e),
          'args' => [
@@ -236,6 +248,8 @@ class ErrorView
             'An error occurred on the server. Please Contact your Administrator or try again later.',
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
+         'report' => $this->options['report'],
+         'snippet_lines' => $this->options['snippet_lines'],
          'color' => $this->errorTypeColor($e['type'] ?? $e['code'] ?? 0) ?? 'danger',
          'backtrace' => 'No backtrace available',
          'args' => [
@@ -257,6 +271,8 @@ class ErrorView
          'message' => 'Unknown',
          'APP_NAME' => $this->options['name'],
          'ROOT_PATH' => $this->baseUrl,
+         'report' => $this->options['report'],
+         'snippet_lines' => $this->options['snippet_lines'],
          'color' => 'warning',
          'backtrace' => 'Unknown',
          'args' => [

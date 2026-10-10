@@ -47,6 +47,9 @@ class ErrorHandler extends Exception
     */
    public array $options = [];
 
+   /** The report of the error being handled (see Report::make()). */
+   private ?array $report = null;
+
    /**
     * Constructor for the ErrorHandler class.
     * @param array{
@@ -111,6 +114,14 @@ class ErrorHandler extends Exception
          'email_logging_mailer' => $handler_options['email_logging_mailer'] ?? null,
          'email_logging_mailer_options' => $handler_options['email_logging_mailer_options'] ?? [],
          'error_view' => $handler_options['error_view'] ?? __DIR__ . '/../views/user.php',
+         // how an error is shown and logged
+         'root_path' => $handler_options['root_path'] ?? '',           // the project folder: paths in pages and logs are shown relative to it
+         'editor' => $handler_options['editor'] ?? 'vscode',           // vscode, cursor, phpstorm, sublime, none ... links that open a file at its line
+         'editor_path_map' => $handler_options['editor_path_map'] ?? [], // server folder => the same folder on your machine (Docker, WSL, a VM)
+         'snippet_lines' => $handler_options['snippet_lines'] ?? 6,    // lines of code shown above and below the failing line
+         'log_style' => $handler_options['log_style'] ?? 'daily',      // daily: one errors-DATE.log; per_error: a file for each error
+         'log_format' => $handler_options['log_format'] ?? 'text',     // text, or json (one object per line)
+         'log_code_lines' => $handler_options['log_code_lines'] ?? 3,  // lines of code kept in a log entry above and below the failing line
       ];
 
       // Set the error reporting level.
@@ -154,13 +165,8 @@ class ErrorHandler extends Exception
     */
    public function handleException(Exception|Error $e): void
    {
-      // Log the exception message.
-      $msg = $e->getMessage();
-      $msg .= " in {$e->getFile()} on line {$e->getLine()}";
-      $msg .= "\n{$e->getTraceAsString()}";
-      $this->logError($msg, (int)$e->getLine());
-
-      // Display the error message.
+      // Log the error with its location, request, code and stack; show it.
+      $this->logReport($e);
       $this->displayError($e);
    }
 
@@ -176,8 +182,7 @@ class ErrorHandler extends Exception
          // Clean ALL output buffers before responding — critical for shutdown errors
          // where PHP may have already partially flushed earlier output.
          while (ob_get_level()) ob_end_clean();
-         $message = $error['message'] . " in {$error['file']} on line {$error['line']}";
-         $this->logError($message, (int)$error['line']);
+         $this->logReport($error);
          $this->displayError($error);
       }
    }
@@ -196,27 +201,30 @@ class ErrorHandler extends Exception
       );
    }
    /**
-    * 
-    * Log an error message to the error log file.
+    * Log a plain message to the error log file (the simple form: one string, one line number).
     * @param string $errorMessage The error message to log.
     * @param int|string $line The line number where the error occurred.
     * @return void
     */
    private function logError(string $errorMessage, int|string $line): void
    {
-      (new ErrorLogger(
-         [
-            'log_errors' => $this->options['log_errors'],
-            'logs_directory' => $this->options['logs_directory'],
-            'dev_logs' => $this->options['dev_logs'],
-            'dev_logs_directory' => $this->options['dev_logs_directory'],
-            'email_logging' => $this->options['email_logging'],
-            'email_logging_address' => $this->options['email_logging_address'],
-            'email_logging_subject' => $this->options['email_logging_subject'],
-            'email_logging_mailer' => $this->options['email_logging_mailer'],
-            'email_logging_mailer_options' => $this->options['email_logging_mailer_options'],
-         ]
-      ))->log($errorMessage, $line);
+      $this->logger()->log($errorMessage, $line);
+   }
+
+   /** Build the report of an error and log it. Logging must never hide the error: a failure to write is ignored. */
+   private function logReport(\Throwable|array $error): void
+   {
+      try {
+         $this->report = Report::make($error, $this->options);
+         $this->logger()->logReport($this->report);
+      } catch (\Throwable) {
+         // the log folder may not be writable; the error page still shows
+      }
+   }
+
+   private function logger(): ErrorLogger
+   {
+      return new ErrorLogger($this->options);
    }
 
    /**
@@ -233,6 +241,8 @@ class ErrorHandler extends Exception
             'debug' => $this->options['app_debug'],
             'error_view' => $this->options['error_view'],
             'baseUrl' => $this->options['base_url'],
+            'snippet_lines' => $this->options['snippet_lines'],
+            'report' => $this->report ?? Report::make($e, $this->options),
          ]
       );
       if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {

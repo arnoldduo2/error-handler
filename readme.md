@@ -7,7 +7,8 @@ A robust, customizable, and developer-friendly error handler for PHP application
 - **Graceful Error Handling:** Catches and manages PHP errors, exceptions, and fatal errors effectively.
 - **Customizable Logging:** Flexible error logging to files, with options for separate development logs and email notifications.
 - **User-Friendly Error Views:** Provides customizable error views for a better user experience, with distinct views for development and production environments.
-- **Detailed Debugging:** Offers detailed error information for developers in development mode, including stack traces and error details.
+- **Detailed Debugging:** In development the error page shows the code where the error happened, with the failing part underlined in red, the code of every step of the stack, the request and the environment, and an **Open in editor** link that opens the file at that line (VS Code, Cursor, PhpStorm, Sublime ...). No CDN: it works offline.
+- **Readable logs:** every error is written with its message, location, request, the failing code (with a caret under the failing part) and the stack, in one file per day. Optional JSON lines for log tools. Passwords, tokens and cookies are never written.
 - **Easy Integration:** Simple to integrate into any PHP project with minimal setup.
 - **Environment-Aware:** Adapts error handling behavior based on the application environment (development/production).
 - **Email Logging:** Option to send error logs directly to an email address.
@@ -92,6 +93,53 @@ The `ErrorHandler` constructor accepts an array of options to customize its beha
 | `email_logging_mailer`         | `object` | `null`                                 | The mailer object to use for sending emails.                                                              |
 | `email_logging_mailer_options` | `array`  | `[]`                                   | The options for the mailer.                                                                               |
 | `error_view`                   | `string` | `null`                                 | The path to the error view file. that matches your application. If null the handler will use its default. |
+| `root_path`                    | `string` | the folder that holds `vendor/`        | Your project folder. Paths on the error page and in logs are shown relative to it (`app/Items.php:42`). |
+| `editor`                       | `string` | `vscode`                               | Which editor the **Open in editor** links open: `vscode`, `vscode-insiders`, `vscodium`, `cursor`, `phpstorm`, `idea`, `sublime`, `atom`, `none`, or a pattern with `{file}`, `{line}`, `{column}`. |
+| `editor_path_map`              | `array`  | `[]`                                   | When the code runs on another machine than your editor (Docker, WSL, a VM): `['/var/www/html' => 'C:/xampp/htdocs/app']`. |
+| `snippet_lines`                | `int`    | `6`                                    | Lines of code shown above and below the failing line on the error page. |
+| `log_style`                    | `string` | `daily`                                | `daily`: all errors of a day in `errors-YYYY-MM-DD.log`, oldest first. `per_error`: one file per error (the older behaviour). |
+| `log_format`                   | `string` | `text`                                 | `text` (readable) or `json` (one JSON object per line in `errors-YYYY-MM-DD.jsonl`). E-mails always carry the readable text. |
+| `log_code_lines`               | `int`    | `3`                                    | Lines of code kept above and below the failing line in a log entry. |
+
+## The error page (development)
+
+With `app_enviroment` set to `development` an uncaught exception, a PHP warning or a fatal error shows:
+
+- the message, its class, the file and line, with **Open in editor** (the same idea as clicking the source link in a browser console: it opens the real file at the real line) and **Copy path**;
+- **the code** around the line, coloured, with the failing line marked and the failing part underlined in red: an undefined variable, a missing function or method, an array key, a class that was not found, a division by zero; when the message gives no clue the whole statement is underlined;
+- **Debug Trace**: every step of the call stack with its own file, line, function and code (click a step to open it); steps inside `vendor/` are dimmed and can be hidden;
+- **Request** (method, URL, headers, query and form input, cookie names), **Environment**, and **Caused by** when the exception has previous exceptions. Passwords, tokens, API keys, cookies and `Authorization` are shown as `[hidden]`.
+
+In production visitors see your `error_view` (or the default page) and nothing about the code. Ajax and POST requests get JSON: `{"type": "error", "msg": "..."}`, and in development also `debug` with the class, the relative file and line, an editor link and the first steps of the trace.
+
+## The log
+
+```
+================================================================================
+[2026-10-10 14:03:22 +00:00]  WARNING  ErrorException  #833b6080
+--------------------------------------------------------------------------------
+Message   Undefined variable $price
+Location  app/Controllers/ItemsController.php:12
+Request   POST http://localhost:8000/items/5/edit?x=1  from 127.0.0.1
+Input     name=Bolt  password=[hidden]
+App       Cast Starter · development · PHP 8.3.6 · 2 MB
+
+Code
+      9 |     {
+     10 |         $total = 0;
+     11 |         foreach ($items as $i) {
+   > 12 |             $total += $i['qty'] * $price;
+        |                                   ^^^^^^
+     13 |         }
+
+Stack
+  #0  app/Controllers/ItemsController.php:12   ItemsController->edit()
+  #1  app/Router.php:21                        {closure}()
+  #2  vendor/x/lib.php:4                       vendor_dispatch()
+================================================================================
+```
+
+The id (`#833b6080`) is the same on the error page, so a screenshot from a user finds the entry. Errors in the command line show the command instead of a request. `log_style => 'per_error'` keeps the old one-file-per-error layout; `log_format => 'json'` writes one JSON object per line for tools such as Loki, Datadog or `jq`.
 
 ## Examples
 

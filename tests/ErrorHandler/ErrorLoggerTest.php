@@ -116,4 +116,58 @@ class ErrorLoggerTest extends TestCase
 
       $this->assertFalse($mailer->sent);
    }
+
+   private function report(string $message = 'Boom'): array
+   {
+      return \Anode\ErrorHandler\Report::make(new \RuntimeException($message), ['root_path' => dirname(__DIR__, 2)]);
+   }
+
+   public function testReportsOfADayShareOneReadableFile(): void
+   {
+      $logger = new ErrorLogger(['logs_directory' => $this->logDir]);
+      $logger->logReport($this->report('first'));
+      $logger->logReport($this->report('second'));
+
+      $files = TestFiles::logs($this->logDir);
+      $this->assertCount(1, $files);
+      $this->assertSame('errors-' . date('Y-m-d') . '.log', basename($files[0]));
+      $text = (string) file_get_contents($files[0]);
+      $this->assertSame(2, substr_count($text, "Message   "));
+      $this->assertLessThan(strpos($text, 'second'), strpos($text, 'first'), 'oldest first, newest last');
+   }
+
+   public function testPerErrorStyleKeepsTheOldFileNames(): void
+   {
+      $logger = new ErrorLogger(['logs_directory' => $this->logDir, 'log_style' => 'per_error']);
+      $logger->logReport($this->report());
+      $logger->logReport($this->report());
+      $this->assertCount(2, TestFiles::logs($this->logDir));
+   }
+
+   public function testJsonFormatWritesOneObjectPerLine(): void
+   {
+      $logger = new ErrorLogger(['logs_directory' => $this->logDir, 'log_format' => 'json']);
+      $logger->logReport($this->report('a'));
+      $logger->logReport($this->report('b'));
+      $files = glob($this->logDir . '/*.jsonl');
+      $this->assertCount(1, $files);
+      $lines = array_filter(explode("\n", (string) file_get_contents($files[0])));
+      $this->assertCount(2, $lines);
+      $this->assertSame('b', json_decode(end($lines), true)['message']);
+   }
+
+   public function testTheEmailCarriesTheReadableEntryEvenInJsonMode(): void
+   {
+      $mailer = new DummyMailer();
+      $logger = new ErrorLogger(['logs_directory' => $this->logDir, 'log_format' => 'json', 'email_logging' => true, 'email_logging_address' => 'ops@example.com', 'email_logging_mailer' => $mailer]);
+      $logger->logReport($this->report('mail me'));
+      $this->assertTrue($mailer->sent);
+      $this->assertStringContainsString('Message   mail me', $mailer->message);
+   }
+
+   public function testNothingIsWrittenForAReportWhenLoggingIsOff(): void
+   {
+      (new ErrorLogger(['logs_directory' => $this->logDir, 'log_errors' => false]))->logReport($this->report());
+      $this->assertSame([], TestFiles::logs($this->logDir));
+   }
 }
